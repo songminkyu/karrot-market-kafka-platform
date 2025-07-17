@@ -1,0 +1,86 @@
+plugins {
+	id 'org.jetbrains.kotlin.jvm' version '1.9.25'
+	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+	id 'org.springframework.boot' version '3.5.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id "com.github.davidmc24.gradle.plugin.avro" version "1.9.1"
+}
+
+group = 'com.karrot'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven {
+		url = 'https://packages.confluent.io/maven/'
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Spring Boot
+	implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	implementation "org.springframework.boot:spring-boot-starter-validation"
+	implementation "org.springframework.boot:spring-boot-starter-actuator"
+	implementation "org.springframework.boot:spring-boot-starter-aop"
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	// Kafka
+	implementation "org.springframework.kafka:spring-kafka"
+	implementation "org.apache.kafka:kafka-streams"
+	implementation "io.confluent:kafka-avro-serializer:8.0.0"
+	implementation "io.confluent:kafka-schema-registry-client:8.0.0"
+	implementation "io.confluent:kafka-streams-avro-serde:8.0.0"
+
+	// Kotlin
+	implementation "org.jetbrains.kotlin:kotlin-reflect"
+	implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core"
+	implementation "org.jetbrains.kotlinx:kotlinx-coroutines-reactor"
+	implementation "com.fasterxml.jackson.module:jackson-module-kotlin"
+
+	// Database
+	implementation "org.postgresql:postgresql"
+	implementation "org.flywaydb:flyway-core"
+	implementation "com.zaxxer:HikariCP"
+
+	// Monitoring
+	implementation "io.micrometer:micrometer-registry-datadog"
+	implementation "io.micrometer:micrometer-registry-prometheus"
+
+	// Logging
+	implementation "io.github.microutils:kotlin-logging-jvm:3.0.5"
+
+	// Documentation
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9"
+
+	// Test
+	testImplementation "org.springframework.boot:spring-boot-starter-test"
+	testImplementation "org.springframework.kafka:spring-kafka-test"
+	testImplementation "org.testcontainers:testcontainers"
+	testImplementation "org.testcontainers:kafka"
+	testImplementation "org.testcontainers:postgresql"
+	testImplementation "io.mockk:mockk:1.14.5"
+	testImplementation "com.ninja-squad:springmockk:4.0.2"
+
+}
+
+kotlin {
+	compilerOptions {
+		freeCompilerArgs.addAll '-Xjsr305=strict'
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
