@@ -1,0 +1,275 @@
+graph TB
+    %% Global Load Balancer & CDN
+    subgraph "Global Infrastructure"
+        GLB[Global Load Balancer<br/>AWS Route 53 + CloudFront]
+        CDN[CDN Edge Locations<br/>이미지/정적 자원 캐싱]
+        WAF[Web Application Firewall<br/>DDoS 보호]
+    end
+    
+    %% Regional Infrastructure - Korea
+    subgraph "Korea Region - Primary"
+        subgraph "Multi-AZ Load Balancers"
+            ALB1[ALB Zone A]
+            ALB2[ALB Zone B] 
+            ALB3[ALB Zone C]
+        end
+        
+        subgraph "API Gateway Cluster"
+            AG1[API Gateway 1<br/>Zone A]
+            AG2[API Gateway 2<br/>Zone B]
+            AG3[API Gateway 3<br/>Zone C]
+        end
+        
+        subgraph "Service Mesh - Istio"
+            SM[Istio Service Mesh<br/>트래픽 관리/보안/관찰]
+        end
+    end
+    
+    %% Core Business Services - Kubernetes Clusters
+    subgraph "High-Traffic Core Services"
+        subgraph "Trade Service Cluster"
+            TS1[Trade Service Pod 1]
+            TS2[Trade Service Pod 2]
+            TS3[Trade Service Pod 3]
+            TSN[Trade Service Pod N...]
+        end
+        
+        subgraph "Chat Service Cluster"
+            CS1[Chat Service Pod 1]
+            CS2[Chat Service Pod 2]
+            CS3[Chat Service Pod 3]
+            CSN[Chat Service Pod N...]
+        end
+        
+        subgraph "Payment Service Cluster"
+            PS1[Payment Service Pod 1]
+            PS2[Payment Service Pod 2]
+            PS3[Payment Service Pod 3]
+            PSN[Payment Service Pod N...]
+        end
+        
+        subgraph "Search Service Cluster"
+            SS1[Search Service Pod 1]
+            SS2[Search Service Pod 2]
+            SS3[Search Service Pod 3]
+            SSN[Search Service Pod N...]
+        end
+    end
+    
+    %% Multi-Layer Caching Strategy
+    subgraph "Multi-Layer Cache"
+        subgraph "L1 Cache - Application"
+            CAFFEINE[Caffeine In-Memory Cache<br/>각 Pod 내부]
+        end
+        
+        subgraph "L2 Cache - Distributed"
+            RC1[Redis Cluster 1<br/>Primary-Replica]
+            RC2[Redis Cluster 2<br/>Primary-Replica]
+            RC3[Redis Cluster 3<br/>Primary-Replica]
+        end
+        
+        subgraph "L3 Cache - CDN"
+            CF[CloudFront CDN<br/>글로벌 엣지 캐시]
+        end
+    end
+    
+    %% Database Tier - Sharded & Replicated
+    subgraph "Database Tier"
+        subgraph "Trade DB Shards"
+            TDB1[Trade DB Shard 1<br/>Primary + 2 Read Replicas]
+            TDB2[Trade DB Shard 2<br/>Primary + 2 Read Replicas]
+            TDB3[Trade DB Shard 3<br/>Primary + 2 Read Replicas]
+            TDBN[Trade DB Shard N...]
+        end
+        
+        subgraph "User DB Shards"
+            UDB1[User DB Shard 1<br/>Primary + 2 Read Replicas]
+            UDB2[User DB Shard 2<br/>Primary + 2 Read Replicas]
+            UDB3[User DB Shard 3<br/>Primary + 2 Read Replicas]
+        end
+        
+        subgraph "Chat Storage"
+            MONGO1[MongoDB Cluster 1<br/>3 Node Replica Set]
+            MONGO2[MongoDB Cluster 2<br/>3 Node Replica Set]
+            MONGO3[MongoDB Cluster 3<br/>3 Node Replica Set]
+        end
+        
+        subgraph "Search Engine"
+            ES1[Elasticsearch Cluster<br/>데이터 노드 6개]
+            ES2[Elasticsearch Cluster<br/>마스터 노드 3개]
+        end
+    end
+    
+    %% Event Streaming Platform
+    subgraph "Event Streaming - Apache Kafka"
+        subgraph "Kafka Clusters"
+            KC1[Kafka Cluster 1<br/>브로커 6개 + 주키퍼 3개]
+            KC2[Kafka Cluster 2<br/>브로커 6개 + 주키퍼 3개]
+        end
+        
+        subgraph "Stream Processing"
+            KS1[Kafka Streams App 1<br/>실시간 분석]
+            KS2[Kafka Streams App 2<br/>이벤트 집계]
+            KS3[Kafka Streams App 3<br/>알림 처리]
+        end
+    end
+    
+    %% Async Processing Layer
+    subgraph "비동기 처리 계층"
+        subgraph "Message Queues"
+            SQS1[AWS SQS - 이미지 처리]
+            SQS2[AWS SQS - 이메일 발송]
+            SQS3[AWS SQS - 푸시 알림]
+        end
+        
+        subgraph "Batch Processing"
+            SPARK[Apache Spark<br/>대용량 데이터 처리]
+            AIRFLOW[Apache Airflow<br/>워크플로우 관리]
+        end
+    end
+    
+    %% Storage Layer
+    subgraph "Storage Layer"
+        subgraph "Object Storage"
+            S3HOT[S3 Standard<br/>최근 이미지]
+            S3COLD[S3 IA/Glacier<br/>오래된 이미지]
+        end
+        
+        subgraph "File System"
+            EFS[AWS EFS<br/>공유 파일 시스템]
+        end
+    end
+    
+    %% Monitoring & Observability
+    subgraph "관찰가능성 스택"
+        subgraph "Metrics"
+            PROM[Prometheus Cluster<br/>메트릭 수집]
+            GRAFANA[Grafana Cluster<br/>대시보드]
+        end
+        
+        subgraph "Logging"
+            ELASTIC[ELK Stack<br/>로그 집계/검색]
+            FLUENTD[Fluentd<br/>로그 수집]
+        end
+        
+        subgraph "Tracing"
+            JAEGER[Jaeger<br/>분산 추적]
+            ZIPKIN[Zipkin<br/>성능 추적]
+        end
+        
+        subgraph "APM"
+            NEWRELIC[New Relic<br/>애플리케이션 성능]
+            DATADOG[DataDog<br/>인프라 모니터링]
+        end
+    end
+    
+    %% Auto Scaling
+    subgraph "Auto Scaling"
+        HPA[Horizontal Pod Autoscaler<br/>Pod 수평 확장]
+        VPA[Vertical Pod Autoscaler<br/>Pod 수직 확장]
+        CA[Cluster Autoscaler<br/>노드 확장]
+        KEDA[KEDA<br/>이벤트 기반 확장]
+    end
+    
+    %% Security Layer
+    subgraph "보안 계층"
+        subgraph "Identity & Access"
+            VAULT[HashiCorp Vault<br/>시크릿 관리]
+            KEYCLOAK[Keycloak<br/>통합 인증]
+        end
+        
+        subgraph "Network Security"
+            NSG[Network Security Groups]
+            CALICO[Calico Network Policies]
+        end
+    end
+    
+    %% Disaster Recovery
+    subgraph "재해복구 - Standby Region"
+        DR[DR Site<br/>일본 리전<br/>RTO: 5분, RPO: 1분]
+    end
+    
+    %% External Services
+    subgraph "External APIs"
+        BANK[은행 API<br/>레이트 리미팅]
+        MAPS[지도 API<br/>캐시 + 폴백]
+        SMS[SMS/Push<br/>다중 제공업체]
+        PAYMENT[PG API<br/>장애 대비 다중화]
+    end
+    
+    %% Client Connections
+    subgraph "Client Applications"
+        MOBILE[Mobile Apps<br/>1800만 MAU]
+        WEB[Web Application<br/>반응형]
+        ADMIN[Admin Dashboard]
+    end
+    
+    %% Connection Flow
+    MOBILE --> GLB
+    WEB --> GLB
+    GLB --> WAF
+    WAF --> CDN
+    CDN --> ALB1
+    CDN --> ALB2
+    CDN --> ALB3
+    
+    ALB1 --> AG1
+    ALB2 --> AG2
+    ALB3 --> AG3
+    
+    AG1 --> SM
+    AG2 --> SM
+    AG3 --> SM
+    
+    SM --> TS1
+    SM --> CS1
+    SM --> PS1
+    SM --> SS1
+    
+    %% Cache Flow
+    TS1 --> CAFFEINE
+    CAFFEINE --> RC1
+    RC1 --> TDB1
+    
+    %% Event Flow
+    TS1 --> KC1
+    KC1 --> KS1
+    KS1 --> SQS1
+    
+    %% Storage Flow
+    TS1 --> S3HOT
+    S3HOT --> S3COLD
+    
+    %% Monitoring Flow
+    TS1 --> PROM
+    TS1 --> ELASTIC
+    TS1 --> JAEGER
+    
+    %% Auto Scaling Flow
+    PROM --> HPA
+    HPA --> TS2
+    
+    %% Security Flow
+    AG1 --> VAULT
+    SM --> CALICO
+    
+    %% DR Flow
+    TDB1 -.-> DR
+    KC1 -.-> DR
+    
+    %% Styling
+    classDef highTraffic fill:#ff6b6b,stroke:#d63031,stroke-width:3px,color:#fff
+    classDef infrastructure fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#fff
+    classDef database fill:#55a3ff,stroke:#2f3542,stroke-width:2px,color:#fff
+    classDef cache fill:#a29bfe,stroke:#6c5ce7,stroke-width:2px,color:#fff
+    classDef monitoring fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#000
+    classDef security fill:#fd79a8,stroke:#e84393,stroke-width:2px,color:#fff
+    classDef external fill:#55efc4,stroke:#00b894,stroke-width:2px,color:#000
+    
+    class TS1,TS2,TS3,CS1,CS2,CS3,PS1,PS2,PS3,SS1,SS2,SS3 highTraffic
+    class GLB,ALB1,ALB2,ALB3,AG1,AG2,AG3,SM infrastructure
+    class TDB1,TDB2,TDB3,UDB1,UDB2,UDB3,MONGO1,MONGO2,MONGO3,ES1,ES2 database
+    class CAFFEINE,RC1,RC2,RC3,CF cache
+    class PROM,GRAFANA,ELASTIC,JAEGER,NEWRELIC monitoring
+    class VAULT,KEYCLOAK,NSG,CALICO security
+    class BANK,MAPS,SMS,PAYMENT external
