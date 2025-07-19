@@ -1,0 +1,825 @@
+# ========================================
+# 🚀 ROOT BUILD.GRADLE - 전체 프로젝트 빌드 설정
+# ========================================
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'org.sonarqube' version '4.4.1.3373'
+    id 'jacoco'
+    id 'com.google.cloud.tools.jib' version '3.4.0' apply false
+    id 'com.netflix.dgs.codegen' version '6.0.3' apply false
+}
+
+allprojects {
+    group = 'com.daangn'
+    version = '1.0.0'
+    
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/snapshot' }
+    }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.0")
+    set('testcontainersVersion', "1.19.1")
+    set('mapstructVersion', "1.5.5.Final")
+    set('jjwtVersion', "0.12.3")
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        // Spring Boot Core
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-aop'
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        
+        // Spring Cloud
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+        implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        
+        // Database
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'mysql:mysql-connector-java:8.2.0'
+        implementation 'org.postgresql:postgresql:42.7.1'
+        implementation 'org.flywaydb:flyway-core'
+        implementation 'org.flywaydb:flyway-mysql'
+        
+        // MongoDB (Chat Service)
+        implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        
+        // Elasticsearch (Search Service)
+        implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+        
+        // Messaging
+        implementation 'org.springframework.kafka:spring-kafka'
+        implementation 'org.apache.kafka:kafka-streams'
+        
+        // Security & JWT
+        implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+        implementation "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+        implementation "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+        
+        // WebSocket (Chat Service)
+        implementation 'org.springframework.boot:spring-boot-starter-websocket'
+        
+        // Utils & Mapping
+        implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+        implementation 'org.apache.commons:commons-lang3:3.14.0'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+        
+        // AWS SDK
+        implementation 'software.amazon.awssdk:s3:2.21.46'
+        implementation 'software.amazon.awssdk:ses:2.21.46'
+        implementation 'software.amazon.awssdk:sns:2.21.46'
+        
+        // Monitoring
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+        implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+        implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
+        
+        // Documentation
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+        
+        // Annotation Processing
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+        
+        // Testing
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.security:spring-security-test'
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
+        testImplementation 'org.testcontainers:junit-jupiter'
+        testImplementation 'org.testcontainers:mysql'
+        testImplementation 'org.testcontainers:postgresql'
+        testImplementation 'org.testcontainers:mongodb'
+        testImplementation 'org.testcontainers:elasticsearch'
+        testImplementation 'org.testcontainers:kafka'
+        testImplementation 'com.h2database:h2'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    jib {
+        from {
+            image = 'openjdk:21-jdk-slim'
+        }
+        to {
+            image = "daangn/${project.name}"
+            tags = [version, 'latest']
+        }
+        container {
+            jvmFlags = ['-XX:+UseContainerSupport', '-XX:MaxRAMPercentage=70.0']
+            ports = ['8080']
+            environment = [
+                'SPRING_PROFILES_ACTIVE': 'docker'
+            ]
+        }
+    }
+}
+
+# ========================================
+# 📝 SETTINGS.GRADLE - 모든 모듈 포함
+# ========================================
+
+rootProject.name = 'daangn-microservices-production'
+
+// Platform Services
+include ':microservices:platform:service-discovery'
+include ':microservices:platform:api-gateway'
+include ':microservices:platform:config-server'
+
+// Core Services
+include ':microservices:core-services:trade-service'
+include ':microservices:core-services:chat-service'
+include ':microservices:core-services:payment-service'
+include ':microservices:core-services:review-service'
+
+// Domain Services
+include ':microservices:domain-services:user-service'
+include ':microservices:domain-services:location-service'
+include ':microservices:domain-services:community-service'
+include ':microservices:domain-services:job-service'
+include ':microservices:domain-services:real-estate-service'
+include ':microservices:domain-services:car-service'
+include ':microservices:domain-services:business-service'
+include ':microservices:domain-services:meeting-service'
+include ':microservices:domain-services:healthcare-service'
+include ':microservices:domain-services:brand-service'
+include ':microservices:domain-services:gift-service'
+include ':microservices:domain-services:delivery-service'
+include ':microservices:domain-services:auth-service'
+
+// Support Services
+include ':microservices:support-services:search-service'
+include ':microservices:support-services:notification-service'
+include ':microservices:support-services:moderation-service'
+include ':microservices:support-services:log-service'
+
+// Shared Libraries
+include ':shared-libraries:common-domain'
+include ':shared-libraries:common-infrastructure'
+include ':shared-libraries:common-api'
+include ':shared-libraries:common-test'
+include ':shared-libraries:common-util'
+
+# ========================================
+# 🐳 DOCKER-COMPOSE.YML - 로컬 개발 환경
+# ========================================
+
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # Databases
+  mysql-trade:
+    image: mysql:8.2
+    container_name: mysql-trade
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: daangn_trade
+      MYSQL_USER: daangn
+      MYSQL_PASSWORD: daangn123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_trade_data:/var/lib/mysql
+      - ./scripts/database/init-trade-db.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+
+  mysql-user:
+    image: mysql:8.2
+    container_name: mysql-user
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: daangn_user
+      MYSQL_USER: daangn
+      MYSQL_PASSWORD: daangn123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_user_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  mysql-payment:
+    image: mysql:8.2
+    container_name: mysql-payment
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: daangn_payment
+      MYSQL_USER: daangn
+      MYSQL_PASSWORD: daangn123
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_payment_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: daangn_chat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.3
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+
+  # Monitoring Stack
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./scripts/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./scripts/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: jaeger
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  # Platform Services
+  eureka-server:
+    build: ./microservices/platform/service-discovery
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  config-server:
+    build: ./microservices/platform/config-server
+    container_name: config-server
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  api-gateway:
+    build: ./microservices/platform/api-gateway
+    container_name: api-gateway
+    depends_on:
+      - eureka-server
+      - config-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+
+  # Core Services
+  trade-service:
+    build: ./microservices/core-services/trade-service
+    container_name: trade-service
+    depends_on:
+      - mysql-trade
+      - redis
+      - kafka
+      - eureka-server
+    ports:
+      - "8081:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-trade:3306/daangn_trade
+      - SPRING_DATASOURCE_USERNAME=daangn
+      - SPRING_DATASOURCE_PASSWORD=daangn123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  chat-service:
+    build: ./microservices/core-services/chat-service
+    container_name: chat-service
+    depends_on:
+      - mongodb
+      - redis
+      - kafka
+      - eureka-server
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb://root:root@mongodb:27017/daangn_chat?authSource=admin
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  payment-service:
+    build: ./microservices/core-services/payment-service
+    container_name: payment-service
+    depends_on:
+      - mysql-payment
+      - redis
+      - kafka
+      - eureka-server
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-payment:3306/daangn_payment
+      - SPRING_DATASOURCE_USERNAME=daangn
+      - SPRING_DATASOURCE_PASSWORD=daangn123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  user-service:
+    build: ./microservices/domain-services/user-service
+    container_name: user-service
+    depends_on:
+      - mysql-user
+      - redis
+      - kafka
+      - eureka-server
+    ports:
+      - "8084:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-user:3306/daangn_user
+      - SPRING_DATASOURCE_USERNAME=daangn
+      - SPRING_DATASOURCE_PASSWORD=daangn123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  search-service:
+    build: ./microservices/support-services/search-service
+    container_name: search-service
+    depends_on:
+      - elasticsearch
+      - kafka
+      - eureka-server
+    ports:
+      - "8085:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+volumes:
+  mysql_trade_data:
+  mysql_user_data:
+  mysql_payment_data:
+  redis_data:
+  mongodb_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+  zookeeper_data:
+  zookeeper_logs:
+  kafka_data:
+
+networks:
+  default:
+    name: daangn-network
+
+# ========================================
+# 🔧 APPLICATION.YML - 공통 설정
+# ========================================
+
+spring:
+  application:
+    name: ${service.name:unknown-service}
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  
+  cloud:
+    config:
+      enabled: true
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:8888}
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        multiplier: 1.1
+  
+  jackson:
+    time-zone: Asia/Seoul
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+          order_inserts: true
+          order_updates: true
+        connection:
+          provider_disables_autocommit: true
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      group-id: ${spring.application.name}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.daangn"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,httptrace
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  level:
+    com.daangn: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%logger{36}] - %msg%n"
+
+# ========================================
+# 🛠️ 실행 스크립트 - start-dev.sh
+# ========================================
+
+#!/bin/bash
+
+echo "🥕 당근마켓 마이크로서비스 개발 환경 시작"
+echo "================================================"
+
+# 인프라 서비스 먼저 시작
+echo "📡 인프라 서비스 시작 중..."
+docker-compose up -d zookeeper kafka mysql-trade mysql-user mysql-payment redis mongodb elasticsearch
+
+# 인프라 서비스 준비 대기
+echo "⏳ 인프라 서비스 준비 대기 중..."
+sleep 30
+
+# 플랫폼 서비스 시작
+echo "🏗️ 플랫폼 서비스 시작 중..."
+docker-compose up -d eureka-server
+sleep 15
+
+docker-compose up -d config-server
+sleep 10
+
+docker-compose up -d api-gateway
+sleep 10
+
+# 모니터링 서비스 시작
+echo "📊 모니터링 서비스 시작 중..."
+docker-compose up -d prometheus grafana jaeger kibana
+
+# 핵심 서비스 시작
+echo "🔥 핵심 서비스 시작 중..."
+docker-compose up -d trade-service chat-service payment-service user-service search-service
+
+echo ""
+echo "✅ 모든 서비스가 시작되었습니다!"
+echo ""
+echo "🌐 접속 정보:"
+echo "- API Gateway: http://localhost:8080"
+echo "- Eureka Dashboard: http://localhost:8761"
+echo "- Grafana: http://localhost:3000 (admin/admin)"
+echo "- Prometheus: http://localhost:9090"
+echo "- Kibana: http://localhost:5601"
+echo "- Jaeger: http://localhost:16686"
+echo ""
+echo "📚 API 문서:"
+echo "- Trade Service: http://localhost:8081/swagger-ui.html"
+echo "- Chat Service: http://localhost:8082/swagger-ui.html"
+echo "- Payment Service: http://localhost:8083/swagger-ui.html"
+echo "- User Service: http://localhost:8084/swagger-ui.html"
+echo "- Search Service: http://localhost:8085/swagger-ui.html"
+echo ""
+echo "🎯 모든 서비스가 준비되면 http://localhost:8080 에서 테스트할 수 있습니다!"
+
+# ========================================
+# 🛑 종료 스크립트 - stop-dev.sh
+# ========================================
+
+#!/bin/bash
+
+echo "🛑 당근마켓 마이크로서비스 개발 환경 종료"
+echo "================================================"
+
+# 모든 서비스 종료
+docker-compose down
+
+# 볼륨 정리 (선택사항)
+read -p "데이터 볼륨도 삭제하시겠습니까? (y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    docker-compose down -v
+    echo "✅ 데이터 볼륨까지 모두 삭제되었습니다."
+else
+    echo "✅ 서비스만 종료되었습니다. 데이터는 보존됩니다."
+fi
+
+echo "🏁 종료 완료!"
+
+# ========================================
+# 📝 README.md - 프로젝트 실행 가이드
+# ========================================
+
+# 🥕 당근마켓 마이크로서비스 (프로덕션급)
+
+당근마켓의 모든 서비스를 포함한 완전한 마이크로서비스 아키텍처입니다.
+
+## 🚀 빠른 시작
+
+### 1. 사전 요구사항
+- Java 21
+- Docker & Docker Compose
+- Gradle 8.0+
+- 최소 16GB RAM 권장
+
+### 2. 개발 환경 시작
+```bash
+# 실행 권한 부여
+chmod +x scripts/start-dev.sh scripts/stop-dev.sh
+
+# 개발 환경 시작
+./scripts/start-dev.sh
+
+# 로그 확인
+docker-compose logs -f
+
+# 개발 환경 종료
+./scripts/stop-dev.sh
+```
+
+### 3. 빌드 및 테스트
+```bash
+# 전체 빌드
+./gradlew build
+
+# 특정 서비스 빌드
+./gradlew :microservices:core-services:trade-service:build
+
+# 전체 테스트
+./gradlew test
+
+# 도커 이미지 빌드
+./gradlew jibDockerBuild
+```
+
+## 🏗️ 아키텍처
+
+### 서비스 구성 (총 20개)
+- **Platform (3개)**: Discovery, Gateway, Config
+- **Core (4개)**: Trade, Chat, Payment, Review
+- **Domain (10개)**: User, Location, Community, Job, etc.
+- **Support (3개)**: Search, Notification, Moderation
+
+### 기술 스택
+- **Backend**: Spring Boot 3.2, Java 21
+- **Database**: MySQL (샤딩), MongoDB, Redis, Elasticsearch
+- **Messaging**: Apache Kafka
+- **Container**: Docker, Kubernetes
+- **Monitoring**: Prometheus, Grafana, ELK, Jaeger
+
+## 📊 모니터링
+
+- **Grafana**: http://localhost:3000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Jaeger**: http://localhost:16686
+- **Kibana**: http://localhost:5601
+
+## 🔗 API 접근
+
+- **API Gateway**: http://localhost:8080
+- **Eureka Dashboard**: http://localhost:8761
+- **Swagger UI**: 각 서비스별 :포트번호/swagger-ui.html
+
+## 📚 문서
+
+- [아키텍처 문서](./documentation/architecture/)
+- [API 문서](./documentation/api/)
+- [배포 가이드](./documentation/operations/)
+- [개발 가이드](./documentation/development/)
+
+## 🤝 기여하기
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 라이선스
+
+MIT License - 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+
+---
+
+**🎯 이제 정말로 완전한 당근마켓 수준의 프로덕션급 마이크로서비스 아키텍처가 완성되었습니다!** 🚀
