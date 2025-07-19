@@ -1,0 +1,1382 @@
+daangn-microservices-production/
+├── README.md
+├── ARCHITECTURE.md
+├── DEPLOYMENT.md
+├── MONITORING.md
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── kubernetes/
+│   ├── base/
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── service-account.yaml
+│   │   └── network-policies.yaml
+│   ├── overlays/
+│   │   ├── development/
+│   │   ├── staging/
+│   │   └── production/
+│   ├── istio/
+│   │   ├── virtual-service.yaml
+│   │   ├── destination-rule.yaml
+│   │   ├── gateway.yaml
+│   │   └── service-mesh.yaml
+│   └── monitoring/
+│       ├── prometheus/
+│       ├── grafana/
+│       └── jaeger/
+├── gradle/
+│   └── wrapper/
+├── gradlew
+├── gradlew.bat
+├── settings.gradle
+├── build.gradle
+├── gradle.properties
+└── microservices/
+    │
+    ├── platform/
+    │   ├── service-discovery/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   ├── k8s/
+    │   │   └── src/main/java/com/daangn/discovery/
+    │   │       ├── DiscoveryApplication.java
+    │   │       └── config/
+    │   │           ├── EurekaConfig.java
+    │   │           ├── SecurityConfig.java
+    │   │           └── MetricsConfig.java
+    │   │
+    │   ├── api-gateway/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   ├── k8s/
+    │   │   └── src/main/java/com/daangn/gateway/
+    │   │       ├── GatewayApplication.java
+    │   │       ├── config/
+    │   │       │   ├── GatewayConfig.java
+    │   │       │   ├── SecurityConfig.java
+    │   │       │   ├── RateLimitConfig.java
+    │   │       │   ├── CircuitBreakerConfig.java
+    │   │       │   └── MetricsConfig.java
+    │   │       ├── filter/
+    │   │       │   ├── AuthenticationFilter.java
+    │   │       │   ├── RateLimitFilter.java
+    │   │       │   ├── MetricsFilter.java
+    │   │       │   ├── TracingFilter.java
+    │   │       │   └── LoadBalancingFilter.java
+    │   │       ├── security/
+    │   │       │   ├── JwtAuthenticationManager.java
+    │   │       │   └── SecurityService.java
+    │   │       └── monitoring/
+    │   │           ├── HealthCheckController.java
+    │   │           └── MetricsController.java
+    │   │
+    │   └── config-server/
+    │       ├── build.gradle
+    │       ├── Dockerfile
+    │       ├── k8s/
+    │       └── src/main/java/com/daangn/config/
+    │           ├── ConfigServerApplication.java
+    │           ├── config/
+    │           │   ├── ConfigServerConfig.java
+    │           │   ├── SecurityConfig.java
+    │           │   └── GitConfig.java
+    │           └── security/
+    │               └── ConfigEncryption.java
+    │
+    ├── core-services/
+    │   │
+    │   ├── trade-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   ├── k8s/
+    │   │   │   ├── deployment.yaml
+    │   │   │   ├── service.yaml
+    │   │   │   ├── hpa.yaml
+    │   │   │   ├── configmap.yaml
+    │   │   │   └── secret.yaml
+    │   │   └── src/
+    │   │       ├── main/java/com/daangn/trade/
+    │   │       │   ├── TradeServiceApplication.java
+    │   │       │   │
+    │   │       │   ├── domain/
+    │   │       │   │   ├── model/
+    │   │       │   │   │   ├── Trade.java
+    │   │       │   │   │   ├── Product.java
+    │   │       │   │   │   ├── Category.java
+    │   │       │   │   │   ├── Location.java
+    │   │       │   │   │   ├── TradeStatus.java
+    │   │       │   │   │   ├── ProductCondition.java
+    │   │       │   │   │   └── aggregate/
+    │   │       │   │   │       ├── TradeAggregate.java
+    │   │       │   │   │       └── ProductAggregate.java
+    │   │       │   │   ├── repository/
+    │   │       │   │   │   ├── TradeRepository.java
+    │   │       │   │   │   ├── ProductRepository.java
+    │   │       │   │   │   └── CategoryRepository.java
+    │   │       │   │   ├── service/
+    │   │       │   │   │   ├── TradeDomainService.java
+    │   │       │   │   │   ├── ProductDomainService.java
+    │   │       │   │   │   ├── CategoryDomainService.java
+    │   │       │   │   │   └── LocationDomainService.java
+    │   │       │   │   └── event/
+    │   │       │   │       ├── TradeCreatedEvent.java
+    │   │       │   │       ├── TradeCompletedEvent.java
+    │   │       │   │       ├── ProductUpdatedEvent.java
+    │   │       │   │       └── DomainEventPublisher.java
+    │   │       │   │
+    │   │       │   ├── application/
+    │   │       │   │   ├── port/
+    │   │       │   │   │   ├── in/
+    │   │       │   │   │   │   ├── TradeUseCase.java
+    │   │       │   │   │   │   ├── ProductUseCase.java
+    │   │       │   │   │   │   ├── SearchUseCase.java
+    │   │       │   │   │   │   └── RecommendationUseCase.java
+    │   │       │   │   │   └── out/
+    │   │       │   │   │       ├── TradeRepositoryPort.java
+    │   │       │   │   │       ├── ProductRepositoryPort.java
+    │   │       │   │   │       ├── PaymentServicePort.java
+    │   │       │   │   │       ├── UserServicePort.java
+    │   │       │   │   │       ├── LocationServicePort.java
+    │   │       │   │   │       ├── NotificationServicePort.java
+    │   │       │   │   │       ├── SearchServicePort.java
+    │   │       │   │   │       └── EventPublisherPort.java
+    │   │       │   │   ├── service/
+    │   │       │   │   │   ├── TradeService.java
+    │   │       │   │   │   ├── ProductService.java
+    │   │       │   │   │   ├── SearchService.java
+    │   │       │   │   │   ├── RecommendationService.java
+    │   │       │   │   │   └── TradeStatisticsService.java
+    │   │       │   │   └── command/
+    │   │       │   │       ├── CreateTradeCommand.java
+    │   │       │   │       ├── UpdateTradeCommand.java
+    │   │       │   │       ├── CompleteTradeCommand.java
+    │   │       │   │       └── CreateProductCommand.java
+    │   │       │   │
+    │   │       │   ├── adapter/
+    │   │       │   │   ├── in/
+    │   │       │   │   │   ├── web/
+    │   │       │   │   │   │   ├── TradeController.java
+    │   │       │   │   │   │   ├── ProductController.java
+    │   │       │   │   │   │   ├── SearchController.java
+    │   │       │   │   │   │   ├── RecommendationController.java
+    │   │       │   │   │   │   ├── HealthController.java
+    │   │       │   │   │   │   ├── MetricsController.java
+    │   │       │   │   │   │   └── dto/
+    │   │       │   │   │   │       ├── request/
+    │   │       │   │   │   │       │   ├── CreateTradeRequest.java
+    │   │       │   │   │   │       │   ├── UpdateTradeRequest.java
+    │   │       │   │   │   │       │   ├── SearchRequest.java
+    │   │       │   │   │   │       │   └── ProductRequest.java
+    │   │       │   │   │   │       └── response/
+    │   │       │   │   │   │           ├── TradeResponse.java
+    │   │       │   │   │   │           ├── ProductResponse.java
+    │   │       │   │   │   │           ├── SearchResponse.java
+    │   │       │   │   │   │           ├── PagedResponse.java
+    │   │       │   │   │   │           └── ApiResponse.java
+    │   │       │   │   │   ├── messaging/
+    │   │       │   │   │   │   ├── consumer/
+    │   │       │   │   │   │   │   ├── PaymentEventConsumer.java
+    │   │       │   │   │   │   │   ├── UserEventConsumer.java
+    │   │       │   │   │   │   │   └── LocationEventConsumer.java
+    │   │       │   │   │   │   └── config/
+    │   │       │   │   │   │       ├── KafkaConsumerConfig.java
+    │   │       │   │   │   │       └── MessageTopology.java
+    │   │       │   │   │   └── scheduler/
+    │   │       │   │   │       ├── TradeCleanupScheduler.java
+    │   │       │   │   │       ├── StatisticsScheduler.java
+    │   │       │   │   │       └── RecommendationScheduler.java
+    │   │       │   │   │
+    │   │       │   │   └── out/
+    │   │       │   │       ├── persistence/
+    │   │       │   │       │   ├── sharding/
+    │   │       │   │       │   │   ├── ShardingStrategy.java
+    │   │       │   │       │   │   ├── LocationBasedShardingStrategy.java
+    │   │       │   │       │   │   ├── ShardResolver.java
+    │   │       │   │       │   │   └── ShardDataSourceRouter.java
+    │   │       │   │       │   ├── repository/
+    │   │       │   │       │   │   ├── TradeJpaRepository.java
+    │   │       │   │       │   │   ├── ProductJpaRepository.java
+    │   │       │   │       │   │   ├── CategoryJpaRepository.java
+    │   │       │   │       │   │   ├── TradeShardedRepository.java
+    │   │       │   │       │   │   └── ProductShardedRepository.java
+    │   │       │   │       │   ├── entity/
+    │   │       │   │       │   │   ├── TradeEntity.java
+    │   │       │   │       │   │   ├── ProductEntity.java
+    │   │       │   │       │   │   ├── CategoryEntity.java
+    │   │       │   │       │   │   └── LocationEntity.java
+    │   │       │   │       │   ├── mapper/
+    │   │       │   │       │   │   ├── TradeMapper.java
+    │   │       │   │       │   │   ├── ProductMapper.java
+    │   │       │   │       │   │   └── CategoryMapper.java
+    │   │       │   │       │   └── config/
+    │   │       │   │       │       ├── DatabaseConfig.java
+    │   │       │   │       │       ├── JpaConfig.java
+    │   │       │   │       │       ├── TransactionConfig.java
+    │   │       │   │       │       └── ReadWriteSeparationConfig.java
+    │   │       │   │       │
+    │   │       │   │       ├── cache/
+    │   │       │   │       │   ├── strategy/
+    │   │       │   │       │   │   ├── CacheStrategy.java
+    │   │       │   │       │   │   ├── L1CacheStrategy.java
+    │   │       │   │       │   │   ├── L2CacheStrategy.java
+    │   │       │   │       │   │   └── CacheEvictionStrategy.java
+    │   │       │   │       │   ├── adapter/
+    │   │       │   │       │   │   ├── RedisCacheAdapter.java
+    │   │       │   │       │   │   ├── CaffeineCacheAdapter.java
+    │   │       │   │       │   │   └── MultiLevelCacheAdapter.java
+    │   │       │   │       │   ├── serialization/
+    │   │       │   │       │   │   ├── JsonCacheSerializer.java
+    │   │       │   │       │   │   └── ProtobufCacheSerializer.java
+    │   │       │   │       │   └── config/
+    │   │       │   │       │       ├── CacheConfig.java
+    │   │       │   │       │       ├── RedisConfig.java
+    │   │       │   │       │       └── CacheMetricsConfig.java
+    │   │       │   │       │
+    │   │       │   │       ├── messaging/
+    │   │       │   │       │   ├── producer/
+    │   │       │   │       │   │   ├── TradeEventProducer.java
+    │   │       │   │       │   │   ├── ProductEventProducer.java
+    │   │       │   │       │   │   └── AsyncEventProducer.java
+    │   │       │   │       │   ├── stream/
+    │   │       │   │       │   │   ├── TradeEventStream.java
+    │   │       │   │       │   │   ├── ProductEventStream.java
+    │   │       │   │       │   │   └── StatisticsEventStream.java
+    │   │       │   │       │   ├── partitioner/
+    │   │       │   │       │   │   ├── LocationPartitioner.java
+    │   │       │   │       │   │   └── UserPartitioner.java
+    │   │       │   │       │   └── config/
+    │   │       │   │       │       ├── KafkaProducerConfig.java
+    │   │       │   │       │       ├── StreamConfig.java
+    │   │       │   │       │       └── SerializationConfig.java
+    │   │       │   │       │
+    │   │       │   │       ├── external/
+    │   │       │   │       │   ├── client/
+    │   │       │   │       │   │   ├── PaymentServiceClient.java
+    │   │       │   │       │   │   ├── UserServiceClient.java
+    │   │       │   │       │   │   ├── LocationServiceClient.java
+    │   │       │   │       │   │   ├── NotificationServiceClient.java
+    │   │       │   │       │   │   └── SearchServiceClient.java
+    │   │       │   │       │   ├── resilience/
+    │   │       │   │       │   │   ├── CircuitBreakerClient.java
+    │   │       │   │       │   │   ├── RetryableClient.java
+    │   │       │   │       │   │   ├── BulkheadClient.java
+    │   │       │   │       │   │   └── FallbackHandler.java
+    │   │       │   │       │   ├── config/
+    │   │       │   │       │   │   ├── FeignConfig.java
+    │   │       │   │       │   │   ├── ResilienceConfig.java
+    │   │       │   │       │   │   └── LoadBalancerConfig.java
+    │   │       │   │       │   └── fallback/
+    │   │       │   │       │       ├── PaymentServiceFallback.java
+    │   │       │   │       │       ├── UserServiceFallback.java
+    │   │       │   │       │       └── DefaultFallbackHandler.java
+    │   │       │   │       │
+    │   │       │   │       └── search/
+    │   │       │   │           ├── ElasticsearchAdapter.java
+    │   │       │   │           ├── SearchIndexAdapter.java
+    │   │       │   │           ├── ProductSearchAdapter.java
+    │   │       │   │           └── config/
+    │   │       │   │               └── ElasticsearchConfig.java
+    │   │       │   │
+    │   │       │   ├── infrastructure/
+    │   │       │   │   ├── config/
+    │   │       │   │   │   ├── ApplicationConfig.java
+    │   │       │   │   │   ├── SecurityConfig.java
+    │   │       │   │   │   ├── WebConfig.java
+    │   │       │   │   │   ├── AsyncConfig.java
+    │   │       │   │   │   ├── SchedulingConfig.java
+    │   │       │   │   │   └── ProfileConfig.java
+    │   │       │   │   ├── metrics/
+    │   │       │   │   │   ├── BusinessMetrics.java
+    │   │       │   │   │   ├── TechnicalMetrics.java
+    │   │       │   │   │   ├── PerformanceMetrics.java
+    │   │       │   │   │   └── CustomMetricsRegistry.java
+    │   │       │   │   ├── health/
+    │   │       │   │   │   ├── DatabaseHealthIndicator.java
+    │   │       │   │   │   ├── CacheHealthIndicator.java
+    │   │       │   │   │   ├── KafkaHealthIndicator.java
+    │   │       │   │   │   └── ExternalServiceHealthIndicator.java
+    │   │       │   │   ├── tracing/
+    │   │       │   │   │   ├── TracingConfiguration.java
+    │   │       │   │   │   ├── CustomTracer.java
+    │   │       │   │   │   └── SpanTagging.java
+    │   │       │   │   ├── exception/
+    │   │       │   │   │   ├── GlobalExceptionHandler.java
+    │   │       │   │   │   ├── BusinessExceptionHandler.java
+    │   │       │   │   │   ├── TechnicalExceptionHandler.java
+    │   │       │   │   │   └── ExceptionMetrics.java
+    │   │       │   │   └── util/
+    │   │       │   │       ├── ShardingUtils.java
+    │   │       │   │       ├── PerformanceUtils.java
+    │   │       │   │       ├── MetricsUtils.java
+    │   │       │   │       └── TracingUtils.java
+    │   │       │   │
+    │   │       │   └── batch/
+    │   │       │       ├── job/
+    │   │       │       │   ├── TradeStatsBatchJob.java
+    │   │       │       │   ├── ProductIndexingBatchJob.java
+    │   │       │       │   ├── CacheWarmupBatchJob.java
+    │   │       │       │   └── DataCleanupBatchJob.java
+    │   │       │       ├── processor/
+    │   │       │       │   ├── TradeStatsProcessor.java
+    │   │       │       │   ├── ProductIndexProcessor.java
+    │   │       │       │   └── CacheWarmupProcessor.java
+    │   │       │       ├── writer/
+    │   │       │       │   ├── DatabaseBatchWriter.java
+    │   │       │       │   ├── ElasticsearchBatchWriter.java
+    │   │       │       │   └── CacheBatchWriter.java
+    │   │       │       └── config/
+    │   │       │           ├── BatchConfig.java
+    │   │       │           ├── JobConfig.java
+    │   │       │           └── SchedulerConfig.java
+    │   │       │
+    │   │       ├── test/
+    │   │       │   ├── java/com/daangn/trade/
+    │   │       │   │   ├── unit/
+    │   │       │   │   │   ├── domain/
+    │   │       │   │   │   ├── application/
+    │   │       │   │   │   └── adapter/
+    │   │       │   │   ├── integration/
+    │   │       │   │   │   ├── repository/
+    │   │       │   │   │   ├── external/
+    │   │       │   │   │   ├── messaging/
+    │   │       │   │   │   └── cache/
+    │   │       │   │   ├── performance/
+    │   │       │   │   │   ├── load/
+    │   │       │   │   │   │   ├── TradeLoadTest.java
+    │   │       │   │   │   │   ├── ProductLoadTest.java
+    │   │       │   │   │   │   └── SearchLoadTest.java
+    │   │       │   │   │   ├── stress/
+    │   │       │   │   │   │   ├── TradeStressTest.java
+    │   │       │   │   │   │   └── DatabaseStressTest.java
+    │   │       │   │   │   └── benchmark/
+    │   │       │   │   │       ├── CacheBenchmark.java
+    │   │       │   │   │       └── SerializationBenchmark.java
+    │   │       │   │   ├── contract/
+    │   │       │   │   │   ├── TradeContractTest.java
+    │   │       │   │   │   └── ProductContractTest.java
+    │   │       │   │   └── e2e/
+    │   │       │   │       ├── TradeE2ETest.java
+    │   │       │   │       └── SearchE2ETest.java
+    │   │       │   └── resources/
+    │   │       │       ├── application-test.yml
+    │   │       │       ├── application-integration-test.yml
+    │   │       │       ├── application-performance-test.yml
+    │   │       │       ├── test-data/
+    │   │       │       │   ├── trade-test-data.sql
+    │   │       │       │   ├── product-test-data.sql
+    │   │       │       │   └── category-test-data.sql
+    │   │       │       ├── contracts/
+    │   │       │       │   ├── trade-service-contracts.groovy
+    │   │       │       │   └── product-service-contracts.groovy
+    │   │       │       ├── load-test/
+    │   │       │       │   ├── trade-load-test.js
+    │   │       │       │   └── search-load-test.js
+    │   │       │       └── testcontainers/
+    │   │       │           ├── docker-compose-test.yml
+    │   │       │           └── test-data-init.sql
+    │   │       │
+    │   │       └── main/resources/
+    │   │           ├── application.yml
+    │   │           ├── application-dev.yml
+    │   │           ├── application-staging.yml
+    │   │           ├── application-prod.yml
+    │   │           ├── application-docker.yml
+    │   │           ├── db/migration/
+    │   │           │   ├── V1__create_trade_tables.sql
+    │   │           │   ├── V2__create_product_tables.sql
+    │   │           │   ├── V3__create_indexes.sql
+    │   │           │   ├── V4__create_partitions.sql
+    │   │           │   └── V5__add_performance_indexes.sql
+    │   │           ├── elasticsearch/
+    │   │           │   ├── mappings/
+    │   │           │   │   ├── product-mapping.json
+    │   │           │   │   └── trade-mapping.json
+    │   │           │   └── settings/
+    │   │           │       └── index-settings.json
+    │   │           ├── kafka/
+    │   │           │   ├── topics/
+    │   │           │   │   ├── trade-events.yaml
+    │   │           │   │   └── product-events.yaml
+    │   │           │   └── streams/
+    │   │           │       └── trade-topology.json
+    │   │           ├── cache/
+    │   │           │   ├── redis-scripts/
+    │   │           │   │   ├── cache-aside.lua
+    │   │           │   │   └── cache-eviction.lua
+    │   │           │   └── caffeine/
+    │   │           │       └── cache-config.conf
+    │   │           ├── monitoring/
+    │   │           │   ├── prometheus/
+    │   │           │   │   └── metrics-config.yml
+    │   │           │   ├── grafana/
+    │   │           │   │   ├── dashboards/
+    │   │           │   │   │   ├── trade-service.json
+    │   │           │   │   │   ├── database-metrics.json
+    │   │           │   │   │   └── cache-metrics.json
+    │   │           │   │   └── alerts/
+    │   │           │   │       └── trade-alerts.yml
+    │   │           │   └── jaeger/
+    │   │           │       └── tracing-config.yml
+    │   │           └── documentation/
+    │   │               ├── api/
+    │   │               │   └── openapi.yaml
+    │   │               ├── architecture/
+    │   │               │   ├── adr/
+    │   │               │   │   ├── 001-database-sharding.md
+    │   │               │   │   ├── 002-caching-strategy.md
+    │   │               │   │   └── 003-event-sourcing.md
+    │   │               │   └── diagrams/
+    │   │               │       ├── trade-service-architecture.puml
+    │   │               │       └── data-flow.puml
+    │   │               └── runbooks/
+    │   │                   ├── deployment.md
+    │   │                   ├── troubleshooting.md
+    │   │                   └── performance-tuning.md
+    │   │
+    │   ├── payment-service/
+    │   │   ├── build.gradle
+	│   │	│	├── Dockerfile
+	│   │	│	├── k8s/
+	│   │	│	│   ├── deployment.yaml
+	│   │	│   ├── service.yaml
+	│   │	│   ├── hpa.yaml (더 엄격한 스케일링)
+	│   │	│   ├── network-policy.yaml (금융 보안)
+	│   │	│   ├── pod-security-policy.yaml
+	│   │	│   └── pci-compliance-config.yaml
+	│   │	└── src/
+	│   │		└── main/java/com/daangn/payment/
+	│   │		    ├── PaymentServiceApplication.java
+	│   │		    │
+	│   │		    ├── domain/
+	│   │		    │   ├── model/
+	│   │		    │   │   ├── Payment.java
+	│   │		    │   │   ├── DaangnPay.java
+	│   │		    │   │   ├── Wallet.java
+	│   │		    │   │   ├── Transaction.java
+	│   │		    │   │   ├── PaymentMethod.java
+	│   │		    │   │   ├── PaymentStatus.java
+	│   │		    │   │   ├── Account.java
+	│   │		    │   │   ├── BankAccount.java
+	│   │		    │   │   ├── Card.java
+	│   │		    │   │   ├── Money.java
+	│   │		    │   │   ├── ExchangeRate.java
+	│   │		    │   │   ├── PaymentLimits.java
+	│   │		    │   │   ├── FraudDetection.java
+	│   │		    │   │   └── aggregate/
+	│   │		    │   │       ├── PaymentAggregate.java
+	│   │		    │   │       ├── WalletAggregate.java
+	│   │		    │   │       └── TransactionAggregate.java
+	│   │		    │   ├── repository/
+	│   │		    │   │   ├── PaymentRepository.java
+	│   │		    │   │   ├── WalletRepository.java
+	│   │		    │   │   ├── TransactionRepository.java
+	│   │		    │   │   ├── AuditRepository.java (금융 감사)
+	│   │		    │   │   └── FraudDetectionRepository.java
+	│   │		    │   ├── service/
+	│   │		    │   │   ├── PaymentDomainService.java
+	│   │		    │   │   ├── WalletDomainService.java
+	│   │		    │   │   ├── TransactionDomainService.java
+	│   │		    │   │   ├── FraudDetectionService.java
+	│   │		    │   │   ├── ComplianceService.java
+	│   │		    │   │   ├── AuditService.java
+	│   │		    │   │   └── ExchangeRateService.java
+	│   │		    │   └── event/
+	│   │		    │       ├── PaymentCreatedEvent.java
+	│   │		    │       ├── PaymentCompletedEvent.java
+	│   │		    │       ├── PaymentFailedEvent.java
+	│   │		    │       ├── FraudDetectedEvent.java
+	│   │		    │       ├── WalletChargedEvent.java
+	│   │		    │       └── ComplianceViolationEvent.java
+	│   │		    │
+	│   │		    ├── application/
+	│   │		    │   ├── port/
+	│   │		    │   │   ├── in/
+	│   │		    │   │   │   ├── ProcessPaymentUseCase.java
+	│   │		    │   │   │   ├── ChargeWalletUseCase.java
+	│   │		    │   │   │   ├── TransferMoneyUseCase.java
+	│   │		    │   │   │   ├── RefundPaymentUseCase.java
+	│   │		    │   │   │   ├── FraudCheckUseCase.java
+	│   │		    │   │   │   └── ComplianceCheckUseCase.java
+	│   │		    │   │   └── out/
+	│   │		    │   │       ├── PaymentRepositoryPort.java
+	│   │		    │   │       ├── BankApiPort.java
+	│   │		    │   │       ├── PgApiPort.java
+	│   │		    │   │       ├── FraudDetectionApiPort.java
+	│   │		    │   │       ├── ComplianceApiPort.java
+	│   │		    │   │       ├── AuditLogPort.java
+	│   │		    │   │       └── NotificationServicePort.java
+	│   │		    │   ├── service/
+	│   │		    │   │   ├── PaymentService.java
+	│   │		    │   │   ├── WalletService.java
+	│   │		    │   │   ├── TransferService.java
+	│   │		    │   │   ├── RefundService.java
+	│   │		    │   │   ├── FraudDetectionService.java
+	│   │		    │   │   ├── ComplianceService.java
+	│   │		    │   │   └── AuditService.java
+	│   │		    │   └── security/
+	│   │		    │       ├── PaymentSecurityService.java
+	│   │		    │       ├── EncryptionService.java
+	│   │		    │       ├── TokenizationService.java
+	│   │		    │       └── PciComplianceService.java
+	│   │		    │
+	│   │		    ├── adapter/
+	│   │		    │   ├── in/
+	│   │		    │   │   ├── web/
+	│   │		    │   │   │   ├── PaymentController.java
+	│   │		    │   │   │   ├── WalletController.java
+	│   │		    │   │   │   ├── TransferController.java
+	│   │		    │   │   │   ├── RefundController.java
+	│   │		    │   │   │   ├── ComplianceController.java
+	│   │		    │   │   │   └── dto/
+	│   │		    │   │   │       ├── PaymentRequest.java
+	│   │		    │   │   │       ├── PaymentResponse.java
+	│   │		    │   │   │       ├── WalletRequest.java
+	│   │		    │   │   │       ├── TransferRequest.java
+	│   │		    │   │   │       └── RefundRequest.java
+	│   │		    │   │   └── messaging/
+	│   │		    │   │       ├── TradeEventConsumer.java
+	│   │		    │   │       ├── UserEventConsumer.java
+	│   │		    │   │       └── FraudEventConsumer.java
+	│   │		    │   │
+	│   │		    │   └── out/
+	│   │		    │       ├── persistence/
+	│   │		    │       │   ├── encryption/
+	│   │		    │       │   │   ├── FieldEncryptionRepository.java
+	│   │		    │       │   │   ├── PaymentDataEncryption.java
+	│   │		    │       │   │   └── KeyRotationService.java
+	│   │		    │       │   ├── audit/
+	│   │		    │       │   │   ├── AuditLogRepository.java
+	│   │		    │       │   │   ├── PaymentAuditTrail.java
+	│   │		    │       │   │   └── ComplianceAuditRepository.java
+	│   │		    │       │   ├── sharding/
+	│   │		    │       │   │   ├── PaymentShardingStrategy.java (시간 기반)
+	│   │		    │       │   │   ├── TransactionShardingStrategy.java
+	│   │		    │       │   │   └── AuditShardingStrategy.java
+	│   │		    │       │   └── replication/
+	│   │		    │       │       ├── PaymentReplicationManager.java
+	│   │		    │       │       └── RealTimeBackupService.java
+	│   │		    │       │
+	│   │		    │       ├── external/
+	│   │		    │       │   ├── bank/
+	│   │		    │       │   │   ├── KakaoPayAdapter.java
+	│   │		    │       │   │   ├── TossPayAdapter.java
+	│   │		    │       │   │   ├── NaverPayAdapter.java
+	│   │		    │       │   │   ├── BankApiAdapter.java
+	│   │		    │       │   │   └── OpenBankingAdapter.java
+	│   │		    │       │   ├── pg/
+	│   │		    │       │   │   ├── IamportAdapter.java
+	│   │		    │       │   │   ├── NicePayAdapter.java
+	│   │		    │       │   │   └── PaycoAdapter.java
+	│   │		    │       │   ├── fraud/
+	│   │		    │       │   │   ├── FraudDetectionApiAdapter.java
+	│   │		    │       │   │   ├── AifraudAdapter.java
+	│   │		    │       │   │   └── RiskAssessmentAdapter.java
+	│   │		    │       │   └── compliance/
+	│   │		    │       │       ├── KftcApiAdapter.java (금감원)
+	│   │		    │       │       ├── FiuApiAdapter.java (금정원)
+	│   │		    │       │       └── ComplianceReportingAdapter.java
+	│   │		    │       │
+	│   │		    │       └── cache/
+	│   │		    │           ├── PaymentCacheAdapter.java
+	│   │		    │           ├── WalletCacheAdapter.java
+	│   │		    │           ├── FraudCacheAdapter.java
+	│   │		    │           └── ComplianceCacheAdapter.java
+	│   │		    │
+	│   │		    ├── infrastructure/
+	│   │		    │   ├── security/
+	│   │		    │   │   ├── PaymentSecurityConfig.java
+	│   │		    │   │   ├── PciDssConfig.java
+	│   │		    │   │   ├── Iso27001Config.java
+	│   │		    │   │   └── DataClassificationConfig.java
+	│   │		    │   ├── compliance/
+	│   │		    │   │   ├── PciComplianceChecker.java
+	│   │		    │   │   ├── GdprComplianceChecker.java
+	│   │		    │   │   ├── KisaComplianceChecker.java
+	│   │		    │   │   └── ComplianceReportGenerator.java
+	│   │		    │   ├── monitoring/
+	│   │		    │   │   ├── PaymentMetrics.java
+	│   │		    │   │   ├── FraudMetrics.java
+	│   │		    │   │   ├── ComplianceMetrics.java
+	│   │		    │   │   └── FinancialMetrics.java
+	│   │		    │   └── batch/
+	│   │		    │       ├── PaymentReconciliationJob.java
+	│   │		    │       ├── FraudAnalysisJob.java
+	│   │		    │       ├── ComplianceReportJob.java
+	│   │		    │       └── AuditLogCleanupJob.java
+	│   │		    │
+	│   │		    └── test/
+	│   │		        ├── java/com/daangn/payment/
+	│   │		        │   ├── unit/
+	│   │		        │   ├── integration/
+	│   │		        │   ├── security/ (보안 테스트)
+	│   │		        │   │   ├── PenetrationTest.java
+	│   │		        │   │   ├── EncryptionTest.java
+	│   │		        │   │   └── ComplianceTest.java
+	│   │		        │   ├── performance/
+	│   │		        │   │   ├── PaymentLoadTest.java
+	│   │		        │   │   ├── ConcurrencyTest.java
+	│   │		        │   │   └── ThroughputTest.java
+	│   │		        │   └── chaos/ (카오스 엔지니어링)
+	│   │		        │       ├── DatabaseFailureTest.java
+	│   │		        │       ├── NetworkLatencyTest.java
+	│   │		        │       └── ThirdPartyFailureTest.java
+	│   │		        └── resources/
+	│   │		            ├── application-payment.yml
+	│   │		            ├── security/
+	│   │		            │   ├── pci-dss-config.yml
+	│   │		            │   └── encryption-keys.yml
+	│   │		            └── compliance/
+	│   │		                ├── regulatory-rules.yml
+	│   │		                └── audit-config.yml
+	│   │        
+	│   │ 
+    │   │
+    │   ├── chat-service/
+    │   │   ├── build.gradle
+	│   │	├── Dockerfile
+	│   │	├── k8s/
+	│   │	│   ├── deployment.yaml
+	│   │	│   ├── service.yaml
+	│   │	│   ├── hpa.yaml (이벤트 기반 스케일링)
+	│   │	│   ├── websocket-config.yaml
+	│   │	│   └── redis-config.yaml
+	│   │	└── src/
+	│   │		└── main/java/com/daangn/chat/
+	│   │		    ├── ChatServiceApplication.java
+	│   │		    │
+	│   │		    ├── domain/
+	│   │		    │   ├── model/
+	│   │		    │   │   ├── ChatRoom.java
+	│   │		    │   │   ├── Message.java
+	│   │		    │   │   ├── Participant.java
+	│   │		    │   │   ├── MessageType.java
+	│   │		    │   │   ├── MessageStatus.java
+	│   │		    │   │   ├── ChatRoomType.java
+	│   │		    │   │   ├── Attachment.java
+	│   │		    │   │   ├── Emoji.java
+	│   │		    │   │   ├── ReadReceipt.java
+	│   │		    │   │   ├── TypingIndicator.java
+	│   │		    │   │   ├── MessageMetadata.java
+	│   │		    │   │   └── aggregate/
+	│   │		    │   │       ├── ChatRoomAggregate.java
+	│   │		    │   │       └── ConversationAggregate.java
+	│   │		    │   ├── repository/
+	│   │		    │   │   ├── ChatRoomRepository.java
+	│   │		    │   │   ├── MessageRepository.java
+	│   │		    │   │   ├── ParticipantRepository.java
+	│   │		    │   │   ├── AttachmentRepository.java
+	│   │		    │   │   └── MessageArchiveRepository.java
+	│   │		    │   ├── service/
+	│   │		    │   │   ├── ChatRoomDomainService.java
+	│   │		    │   │   ├── MessageDomainService.java
+	│   │		    │   │   ├── ParticipantDomainService.java
+	│   │		    │   │   ├── AttachmentDomainService.java
+	│   │		    │   │   ├── ModerationDomainService.java
+	│   │		    │   │   └── EncryptionDomainService.java
+	│   │		    │   └── event/
+	│   │		    │       ├── MessageSentEvent.java
+	│   │		    │       ├── MessageReadEvent.java
+	│   │		    │       ├── UserJoinedEvent.java
+	│   │		    │       ├── UserLeftEvent.java
+	│   │		    │       ├── TypingStartedEvent.java
+	│   │		    │       └── ChatRoomCreatedEvent.java
+	│   │		    │
+	│   │		    ├── application/
+	│   │		    │   ├── port/
+	│   │		    │   │   ├── in/
+	│   │		    │   │   │   ├── SendMessageUseCase.java
+	│   │		    │   │   │   ├── CreateChatRoomUseCase.java
+	│   │		    │   │   │   ├── JoinChatRoomUseCase.java
+	│   │		    │   │   │   ├── LeaveChatRoomUseCase.java
+	│   │		    │   │   │   ├── UploadAttachmentUseCase.java
+	│   │		    │   │   │   ├── MarkAsReadUseCase.java
+	│   │		    │   │   │   └── ModerateMessageUseCase.java
+	│   │		    │   │   └── out/
+	│   │		    │   │       ├── ChatRepositoryPort.java
+	│   │		    │   │       ├── MessageRepositoryPort.java
+	│   │		    │   │       ├── UserServicePort.java
+	│   │		    │   │       ├── FileStoragePort.java
+	│   │		    │   │       ├── ModerationServicePort.java
+	│   │		    │   │       ├── NotificationServicePort.java
+	│   │		    │   │       └── AnalyticsServicePort.java
+	│   │		    │   └── service/
+	│   │		    │       ├── ChatService.java
+	│   │		    │       ├── MessageService.java
+	│   │		    │       ├── AttachmentService.java
+	│   │		    │       ├── ModerationService.java
+	│   │		    │       ├── EncryptionService.java
+	│   │		    │       └── AnalyticsService.java
+	│   │		    │
+	│   │		    ├── adapter/
+	│   │		    │   ├── in/
+	│   │		    │   │   ├── websocket/
+	│   │		    │   │   │   ├── WebSocketChatHandler.java
+	│   │		    │   │   │   ├── WebSocketConfig.java
+	│   │		    │   │   │   ├── WebSocketInterceptor.java
+	│   │		    │   │   │   ├── WebSocketAuthenticationManager.java
+	│   │		    │   │   │   ├── ConnectionManager.java
+	│   │		    │   │   │   ├── PresenceManager.java
+	│   │		    │   │   │   └── dto/
+	│   │		    │   │   │       ├── WebSocketMessage.java
+	│   │		    │   │   │       ├── ChatCommand.java
+	│   │		    │   │   │       ├── TypingIndicator.java
+	│   │		    │   │   │       └── PresenceStatus.java
+	│   │		    │   │   ├── web/
+	│   │		    │   │   │   ├── ChatController.java
+	│   │		    │   │   │   ├── MessageController.java
+	│   │		    │   │   │   ├── AttachmentController.java
+	│   │		    │   │   │   └── AnalyticsController.java
+	│   │		    │   │   └── messaging/
+	│   │		    │   │       ├── TradeEventConsumer.java
+	│   │		    │   │       ├── UserEventConsumer.java
+	│   │		    │   │       └── ModerationEventConsumer.java
+	│   │		    │   │
+	│   │		    │   └── out/
+	│   │		    │       ├── persistence/
+	│   │		    │       │   ├── mongodb/
+	│   │		    │       │   │   ├── ChatRoomMongoRepository.java
+	│   │		    │       │   │   ├── MessageMongoRepository.java
+	│   │		    │       │   │   ├── MessageArchiveRepository.java
+	│   │		    │       │   │   ├── document/
+	│   │		    │       │   │   │   ├── ChatRoomDocument.java
+	│   │		    │       │   │   │   ├── MessageDocument.java
+	│   │		    │       │   │   │   ├── ParticipantDocument.java
+	│   │		    │       │   │   │   └── AttachmentDocument.java
+	│   │		    │       │   │   ├── sharding/
+	│   │		    │       │   │   │   ├── MongoShardingStrategy.java
+	│   │		    │       │   │   │   └── ChatRoomShardResolver.java
+	│   │		    │       │   │   └── indexing/
+	│   │		    │       │   │       ├── MessageIndexManager.java
+	│   │		    │       │   │       └── SearchIndexOptimizer.java
+	│   │		    │       │   └── redis/
+	│   │		    │       │       ├── ChatSessionRepository.java
+	│   │		    │       │       ├── PresenceRepository.java
+	│   │		    │       │       ├── TypingRepository.java
+	│   │		    │       │       ├── UnreadCountRepository.java
+	│   │		    │       │       └── RecentMessagesCache.java
+	│   │		    │       │
+	│   │		    │       ├── realtime/
+	│   │		    │       │   ├── WebSocketMessageBroker.java
+	│   │		    │       │   ├── PresenceBroadcaster.java
+	│   │		    │       │   ├── TypingIndicatorBroadcaster.java
+	│   │		    │       │   ├── MessageDeliveryTracker.java
+	│   │		    │       │   └── ConnectionPoolManager.java
+	│   │		    │       │
+	│   │		    │       ├── storage/
+	│   │		    │       │   ├── S3AttachmentStorage.java
+	│   │		    │       │   ├── ImageOptimizationService.java
+	│   │		    │       │   ├── FileVirusScanner.java
+	│   │		    │       │   └── AttachmentMetadataExtractor.java
+	│   │		    │       │
+	│   │		    │       └── external/
+	│   │		    │           ├── UserServiceAdapter.java
+	│   │		    │           ├── ModerationServiceAdapter.java
+	│   │		    │           ├── NotificationServiceAdapter.java
+	│   │		    │           └── AnalyticsServiceAdapter.java
+	│   │		    │
+	│   │		    ├── infrastructure/
+	│   │		    │   ├── websocket/
+	│   │		    │   │   ├── WebSocketConfiguration.java
+	│   │		    │   │   ├── StompConfiguration.java
+	│   │		    │   │   ├── WebSocketSecurity.java
+	│   │		    │   │   └── ClusterWebSocketManager.java
+	│   │		    │   ├── mongodb/
+	│   │		    │   │   ├── MongoConfiguration.java
+	│   │		    │   │   ├── MongoShardingConfiguration.java
+	│   │		    │   │   ├── MongoIndexConfiguration.java
+	│   │		    │   │   └── MongoTransactionConfiguration.java
+	│   │		    │   ├── redis/
+	│   │		    │   │   ├── RedisClusterConfiguration.java
+	│   │		    │   │   ├── RedisMessageBrokerConfiguration.java
+	│   │		    │   │   ├── RedisSessionConfiguration.java
+	│   │		    │   │   └── RedisPubSubConfiguration.java
+	│   │		    │   ├── monitoring/
+	│   │		    │   │   ├── ChatMetrics.java
+	│   │		    │   │   ├── WebSocketMetrics.java
+	│   │		    │   │   ├── MessageMetrics.java
+	│   │		    │   │   └── PerformanceMetrics.java
+	│   │		    │   └── batch/
+	│   │		    │       ├── MessageArchiveJob.java
+	│   │		    │       ├── InactiveRoomCleanupJob.java
+	│   │		    │       ├── MessageAnalyticsJob.java
+	│   │		    │       └── AttachmentCleanupJob.java
+	│   │		    │
+	│   │		    └── test/
+	│   │		        ├── java/com/daangn/chat/
+	│   │		        │   ├── unit/
+	│   │		        │   ├── integration/
+	│   │		        │   ├── websocket/
+	│   │		        │   │   ├── WebSocketIntegrationTest.java
+	│   │		        │   │   ├── ConnectionLoadTest.java
+	│   │		        │   │   └── MessageThroughputTest.java
+	│   │		        │   ├── performance/
+	│   │		        │   │   ├── ConcurrentUserTest.java
+	│   │		        │   │   ├── MessageVolumeTest.java
+	│   │		        │   │   └── MemoryLeakTest.java
+	│   │		        │   └── chaos/
+	│   │		        │       ├── MongoFailoverTest.java
+	│   │		        │       ├── RedisFailoverTest.java
+	│   │		        │       └── NetworkPartitionTest.java
+	│   │		        └── resources/
+	│   │		            ├── application-chat.yml
+	│   │		            ├── websocket/
+	│   │		            │   └── websocket-config.yml
+	│   │		            └── mongodb/
+	│   │		                ├── sharding-config.yml
+	│   │		                └── index-definitions.json
+    │   │
+    │   ├── user-service/
+    │   │   ├── build.gradle
+	│   │	├── Dockerfile
+	│   │	├── k8s/
+	│   │	│   ├── deployment.yaml
+	│   │	│   ├── service.yaml
+	│   │	│   ├── hpa.yaml
+	│   │	│   ├── gdpr-config.yaml (개인정보보호)
+	│   │	│   └── data-retention-policy.yaml
+	│   │	└── src/
+	│   │		└── main/java/com/daangn/user/
+	│   │		    ├── UserServiceApplication.java
+	│   │		    │
+	│   │		    ├── domain/
+	│   │		    │   ├── model/
+	│   │		    │   │   ├── User.java
+	│   │		    │   │   ├── UserProfile.java
+	│   │		    │   │   ├── UserPreferences.java
+	│   │		    │   │   ├── UserStatus.java
+	│   │		    │   │   ├── VerificationStatus.java
+	│   │		    │   │   ├── UserRole.java
+	│   │		    │   │   ├── Neighbor.java
+	│   │		    │   │   ├── Following.java
+	│   │		    │   │   ├── MannerScore.java
+	│   │		    │   │   ├── ActivityLog.java
+	│   │		    │   │   ├── PersonalData.java (GDPR)
+	│   │		    │   │   ├── ConsentRecord.java
+	│   │		    │   │   └── aggregate/
+	│   │		    │   │       ├── UserAggregate.java
+	│   │		    │   │       ├── NeighborAggregate.java
+	│   │		    │   │       └── PrivacyAggregate.java
+	│   │		    │   ├── repository/
+	│   │		    │   │   ├── UserRepository.java
+	│   │		    │   │   ├── ProfileRepository.java
+	│   │		    │   │   ├── NeighborRepository.java
+	│   │		    │   │   ├── ActivityLogRepository.java
+	│   │		    │   │   ├── ConsentRepository.java
+	│   │		    │   │   └── PersonalDataRepository.java
+	│   │		    │   ├── service/
+	│   │		    │   │   ├── UserDomainService.java
+	│   │		    │   │   ├── ProfileDomainService.java
+	│   │		    │   │   ├── NeighborDomainService.java
+	│   │		    │   │   ├── VerificationDomainService.java
+	│   │		    │   │   ├── PrivacyDomainService.java
+	│   │		    │   │   ├── ConsentDomainService.java
+	│   │		    │   │   └── MannerScoreDomainService.java
+	│   │		    │   └── event/
+	│   │		    │       ├── UserRegisteredEvent.java
+	│   │		    │       ├── UserVerifiedEvent.java
+	│   │		    │       ├── ProfileUpdatedEvent.java
+	│   │		    │       ├── NeighborAddedEvent.java
+	│   │		    │       ├── MannerScoreUpdatedEvent.java
+	│   │		    │       ├── ConsentGivenEvent.java
+	│   │		    │       └── DataDeletionRequestedEvent.java
+	│   │		    │
+	│   │		    ├── application/
+	│   │		    │   ├── port/
+	│   │		    │   │   ├── in/
+	│   │		    │   │   │   ├── RegisterUserUseCase.java
+	│   │		    │   │   │   ├── VerifyUserUseCase.java
+	│   │		    │   │   │   ├── UpdateProfileUseCase.java
+	│   │		    │   │   │   ├── ManageNeighborsUseCase.java
+	│   │		    │   │   │   ├── UpdateMannerScoreUseCase.java
+	│   │		    │   │   │   ├── ManageConsentUseCase.java
+	│   │		    │   │   │   ├── RequestDataDeletionUseCase.java
+	│   │		    │   │   │   └── ExportPersonalDataUseCase.java
+	│   │		    │   │   └── out/
+	│   │		    │   │       ├── UserRepositoryPort.java
+	│   │		    │   │       ├── ProfileRepositoryPort.java
+	│   │		    │   │       ├── LocationServicePort.java
+	│   │		    │   │       ├── NotificationServicePort.java
+	│   │		    │   │       ├── FileStoragePort.java
+	│   │		    │   │       ├── VerificationServicePort.java
+	│   │		    │   │       ├── AuditLogPort.java
+	│   │		    │   │       └── AnalyticsServicePort.java
+	│   │		    │   └── service/
+	│   │		    │       ├── UserService.java
+	│   │		    │       ├── ProfileService.java
+	│   │		    │       ├── NeighborService.java
+	│   │		    │       ├── VerificationService.java
+	│   │		    │       ├── PrivacyService.java
+	│   │		    │       ├── ConsentService.java
+	│   │		    │       ├── MannerScoreService.java
+	│   │		    │       └── DataExportService.java
+	│   │		    │
+	│   │		    ├── adapter/
+	│   │		    │   ├── in/
+	│   │		    │   │   ├── web/
+	│   │		    │   │   │   ├── UserController.java
+	│   │		    │   │   │   ├── ProfileController.java
+	│   │		    │   │   │   ├── NeighborController.java
+	│   │		    │   │   │   ├── VerificationController.java
+	│   │		    │   │   │   ├── PrivacyController.java
+	│   │		    │   │   │   ├── ConsentController.java
+	│   │		    │   │   │   ├── DataExportController.java
+	│   │		    │   │   │   └── dto/
+	│   │		    │   │   │       ├── UserRegistrationRequest.java
+	│   │		    │   │   │       ├── ProfileUpdateRequest.java
+	│   │		    │   │   │       ├── VerificationRequest.java
+	│   │		    │   │   │       ├── ConsentRequest.java
+	│   │		    │   │   │       └── DataExportRequest.java
+	│   │		    │   │   └── messaging/
+	│   │		    │   │       ├── TradeEventConsumer.java
+	│   │		    │   │       ├── PaymentEventConsumer.java
+	│   │		    │   │       ├── ChatEventConsumer.java
+	│   │		    │   │       └── LocationEventConsumer.java
+	│   │		    │   │
+	│   │		    │   └── out/
+	│   │		    │       ├── persistence/
+	│   │		    │       │   ├── sharding/
+	│   │		    │       │   │   ├── UserShardingStrategy.java (user_id 기반)
+	│   │		    │       │   │   ├── ProfileShardingStrategy.java
+	│   │		    │       │   │   └── UserDataShardResolver.java
+	│   │		    │       │   ├── encryption/
+	│   │		    │       │   │   ├── PersonalDataEncryption.java
+	│   │		    │       │   │   ├── FieldLevelEncryption.java
+	│   │		    │       │   │   └── KeyManagementService.java
+	│   │		    │       │   ├── audit/
+	│   │		    │       │   │   ├── UserAuditRepository.java
+	│   │		    │       │   │   ├── PrivacyAuditRepository.java
+	│   │		    │       │   │   └── DataAccessAuditRepository.java
+	│   │		    │       │   └── gdpr/
+	│   │		    │       │       ├── GdprDataRepository.java
+	│   │		    │       │       ├── ConsentRepository.java
+	│   │		    │       │       ├── DataRetentionRepository.java
+	│   │		    │       │       └── DeletionRequestRepository.java
+	│   │		    │       │
+	│   │		    │       ├── verification/
+	│   │		    │       │   ├── PhoneVerificationAdapter.java
+	│   │		    │       │   ├── EmailVerificationAdapter.java
+	│   │		    │       │   ├── IdVerificationAdapter.java
+	│   │		    │       │   ├── SmsVerificationAdapter.java
+	│   │		    │       │   └── OcrVerificationAdapter.java
+	│   │		    │       │
+	│   │		    │       ├── storage/
+	│   │		    │       │   ├── ProfileImageStorage.java
+	│   │		    │       │   ├── VerificationDocumentStorage.java
+	│   │		    │       │   ├── DataExportStorage.java
+	│   │		    │       │   └── SecureFileStorage.java
+	│   │		    │       │
+	│   │		    │       └── external/
+	│   │		    │           ├── LocationServiceAdapter.java
+	│   │		    │           ├── NotificationServiceAdapter.java
+	│   │		    │           ├── AnalyticsServiceAdapter.java
+	│   │		    │           └── ComplianceServiceAdapter.java
+	│   │		    │
+	│   │		    ├── infrastructure/
+	│   │		    │   ├── security/
+	│   │		    │   │   ├── UserSecurityConfig.java
+	│   │		    │   │   ├── PasswordPolicyConfig.java
+	│   │		    │   │   ├── DataClassificationConfig.java
+	│   │		    │   │   └── AccessControlConfig.java
+	│   │		    │   ├── privacy/
+	│   │		    │   │   ├── GdprComplianceConfig.java
+	│   │		    │   │   ├── KisaComplianceConfig.java
+	│   │		    │   │   ├── DataRetentionConfig.java
+	│   │		    │   │   └── ConsentManagementConfig.java
+	│   │		    │   ├── verification/
+	│   │		    │   │   ├── VerificationConfig.java
+	│   │		    │   │   ├── OcrConfig.java
+	│   │		    │   │   ├── BiometricConfig.java
+	│   │		    │   │   └── FraudPreventionConfig.java
+	│   │		    │   ├── monitoring/
+	│   │		    │   │   ├── UserMetrics.java
+	│   │		    │   │   ├── VerificationMetrics.java
+	│   │		    │   │   ├── PrivacyMetrics.java
+	│   │		    │   │   └── SecurityMetrics.java
+	│   │		    │   └── batch/
+	│   │		    │       ├── UserDataRetentionJob.java
+	│   │		    │       ├── ConsentExpirationJob.java
+	│   │		    │       ├── DataDeletionJob.java
+	│   │		    │       ├── MannerScoreCalculationJob.java
+	│   │		    │       └── InactiveUserCleanupJob.java
+	│   │		    │
+	│   │		    └── test/
+	│   │		        ├── java/com/daangn/user/
+	│   │		        │   ├── unit/
+	│   │		        │   ├── integration/
+	│   │		        │   ├── privacy/
+	│   │		        │   │   ├── GdprComplianceTest.java
+	│   │		        │   │   ├── DataDeletionTest.java
+	│   │		        │   │   └── ConsentManagementTest.java
+	│   │		        │   ├── security/
+	│   │		        │   │   ├── EncryptionTest.java
+	│   │		        │   │   ├── AccessControlTest.java
+	│   │		        │   │   └── AuditTest.java
+	│   │		        │   └── performance/
+	│   │		        │       ├── UserLoadTest.java
+	│   │		        │       ├── VerificationLoadTest.java
+	│   │		        │       └── ShardingPerformanceTest.java
+	│   │		        └── resources/
+	│   │		            ├── application-user.yml
+	│   │		            ├── privacy/
+	│   │		            │   ├── gdpr-config.yml
+	│   │		            │   └── data-retention-policy.yml
+	│   │		            └── verification/
+	│   │		                ├── ocr-config.yml
+	│   │		                └── fraud-detection-config.yml
+	│   │
+    │   │
+    ├── shared-libraries/
+    │   ├── common-domain/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/domain/
+    │   │       ├── model/
+    │   │       │   ├── BaseEntity.java
+    │   │       │   ├── BaseAggregateRoot.java
+    │   │       │   ├── DomainEvent.java
+    │   │       │   ├── ValueObject.java
+    │   │       │   └── BusinessId.java
+    │   │       ├── repository/
+    │   │       │   ├── Repository.java
+    │   │       │   ├── ShardedRepository.java
+    │   │       │   └── ReadOnlyRepository.java
+    │   │       ├── event/
+    │   │       │   ├── DomainEventPublisher.java
+    │   │       │   ├── EventStore.java
+    │   │       │   └── EventSourcing.java
+    │   │       └── specification/
+    │   │           ├── Specification.java
+    │   │           └── CompositeSpecification.java
+    │   │
+    │   ├── common-infrastructure/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/infrastructure/
+    │   │       ├── database/
+    │   │       │   ├── sharding/
+    │   │       │   │   ├── ShardingDataSource.java
+    │   │       │   │   ├── ShardingStrategy.java
+    │   │       │   │   ├── ConsistentHashSharding.java
+    │   │       │   │   └── RangeBasedSharding.java
+    │   │       │   ├── replication/
+    │   │       │   │   ├── ReadWriteSplitDataSource.java
+    │   │       │   │   ├── LoadBalancedDataSource.java
+    │   │       │   │   └── ReplicationHealthChecker.java
+    │   │       │   └── transaction/
+    │   │       │       ├── DistributedTransactionManager.java
+    │   │       │       └── SagaTransactionManager.java
+    │   │       ├── cache/
+    │   │       │   ├── multilevel/
+    │   │       │   │   ├── MultiLevelCache.java
+    │   │       │   │   ├── L1Cache.java
+    │   │       │   │   ├── L2Cache.java
+    │   │       │   │   └── CacheEvictionPolicy.java
+    │   │       │   ├── serialization/
+    │   │       │   │   ├── CacheSerializer.java
+    │   │       │   │   ├── JsonSerializer.java
+    │   │       │   │   ├── ProtobufSerializer.java
+    │   │       │   │   └── KryoSerializer.java
+    │   │       │   └── distributed/
+    │   │       │       ├── RedisClusterCache.java
+    │   │       │       ├── HazelcastCache.java
+    │   │       │       └── ConsistentHashingCache.java
+    │   │       ├── messaging/
+    │   │       │   ├── kafka/
+    │   │       │   │   ├── KafkaProducerFactory.java
+    │   │       │   │   ├── KafkaConsumerFactory.java
+    │   │       │   │   ├── KafkaStreamFactory.java
+    │   │       │   │   ├── TopicManager.java
+    │   │       │   │   ├── PartitionStrategy.java
+    │   │       │   │   └── serialization/
+    │   │       │   │       ├── AvroSerializer.java
+    │   │       │   │       ├── JsonSerializer.java
+    │   │       │   │       └── ProtobufSerializer.java
+    │   │       │   ├── patterns/
+    │   │       │   │   ├── EventSourcing.java
+    │   │       │   │   ├── CQRS.java
+    │   │       │   │   ├── Saga.java
+    │   │       │   │   └── Outbox.java
+    │   │       │   └── reliability/
+    │   │       │       ├── RetryableProducer.java
+    │   │       │       ├── DuplicateDetector.java
+    │   │       │       └── DeadLetterQueue.java
+    │   │       ├── security/
+    │   │       │   ├── jwt/
+    │   │       │   │   ├── JwtTokenProvider.java
+    │   │       │   │   ├── JwtTokenValidator.java
+    │   │       │   │   └── JwtConfiguration.java
+    │   │       │   ├── encryption/
+    │   │       │   │   ├── FieldEncryption.java
+    │   │       │   │   ├── AESEncryption.java
+    │   │       │   │   └── KeyRotationService.java
+    │   │       │   └── oauth2/
+    │   │       │       ├── OAuth2ResourceServer.java
+    │   │       │       └── OAuth2Configuration.java
+    │   │       ├── monitoring/
+    │   │       │   ├── metrics/
+    │   │       │   │   ├── CustomMetrics.java
+    │   │       │   │   ├── BusinessMetrics.java
+    │   │       │   │   ├── TechnicalMetrics.java
+    │   │       │   │   └── MetricsCollector.java
+    │   │       │   ├── tracing/
+    │   │       │   │   ├── DistributedTracing.java
+    │   │       │   │   ├── SpanBuilder.java
+    │   │       │   │   └── TraceContextPropagation.java
+    │   │       │   ├── logging/
+    │   │       │   │   ├── StructuredLogging.java
+    │   │       │   │   ├── LoggingAspect.java
+    │   │       │   │   └── CorrelationIdGenerator.java
+    │   │       │   └── health/
+    │   │       │       ├── CompositeHealthIndicator.java
+    │   │       │       ├── DatabaseHealthIndicator.java
+    │   │       │       ├── CacheHealthIndicator.java
+    │   │       │       └── ExternalServiceHealthIndicator.java
+    │   │       └── resilience/
+    │   │           ├── circuitbreaker/
+    │   │           │   ├── CircuitBreakerRegistry.java
+    │   │           │   ├── CircuitBreakerMetrics.java
+    │   │           │   └── CircuitBreakerConfiguration.java
+    │   │           ├── retry/
+    │   │           │   ├── RetryRegistry.java
+    │   │           │   ├── ExponentialBackoffRetry.java
+    │   │           │   └── RetryMetrics.java
+    │   │           ├── bulkhead/
+    │   │           │   ├── BulkheadRegistry.java
+    │   │           │   └── ThreadPoolBulkhead.java
+    │   │           └── timeout/
+    │   │               ├── TimeoutRegistry.java
+    │   │               └── TimeLimiterConfiguration.java
+    │   │
+    │   ├── common-api/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/api/
+    │   │       ├── response/
+    │   │       │   ├── ApiResponse.java
+    │   │       │   ├── PagedResponse.java
+    │   │       │   ├── ErrorResponse.java
+    │   │       │   └── SuccessResponse.java
+    │   │       ├── request/
+    │   │       │   ├── PageRequest.java
+    │   │       │   ├── SortRequest.java
+    │   │       │   └── FilterRequest.java
+    │   │       ├── validation/
+    │   │       │   ├── ValidationGroups.java
+    │   │       │   ├── CustomValidators.java
+    │   │       │   └── BusinessRuleValidator.java
+    │   │       ├── exception/
+    │   │       │   ├── GlobalExceptionHandler.java
+    │   │       │   ├── BusinessException.java
+    │   │       │   ├── TechnicalException.java
+    │   │       │   └── ValidationException.java
+    │   │       └── documentation/
+    │   │           ├── OpenApiConfiguration.java
+    │   │           └── ApiDocumentationGenerator.java
+    │   │
+    │   ├── common-test/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/test/
+    │   │       ├── containers/
+    │   │       │   ├── TestContainersConfiguration.java
+    │   │       │   ├── DatabaseTestContainer.java
+    │   │       │   ├── RedisTestContainer.java
+    │   │       │   ├── KafkaTestContainer.java
+    │   │       │   └── ElasticsearchTestContainer.java
+    │   │       ├── fixtures/
+    │   │       │   ├── TestDataBuilder.java
+    │   │       │   ├── EntityFixtures.java
+    │   │       │   └── EventFixtures.java
+    │   │       ├── performance/
+    │   │       │   ├── LoadTestRunner.java
+    │   │       │   ├── StressTestRunner.java
+    │   │       │   ├── BenchmarkRunner.java
+    │   │       │   └── PerformanceMetricsCollector.java
+    │   │       ├── integration/
+    │   │       │   ├── IntegrationTestBase.java
+    │   │       │   ├── DatabaseIntegrationTest.java
+    │   │       │   ├── MessagingIntegrationTest.java
+    │   │       │   └── CacheIntegrationTest.java
+    │   │       └── mocks/
+    │   │           ├── MockExternalServices.java
+    │   │           ├── MockEventPublisher.java
+    │   │           └── MockCacheProvider.java
+    │   │
+    │   └── common-util/
+    │       ├── build.gradle
+    │       └── src/main/java/com/daangn/common/util/
+    │           ├── date/
+    │           │   ├── DateTimeUtils.java
+    │           │   └── TimezoneUtils.java
+    │           ├── string/
+    │           │   ├── StringUtils.java
+    │           │   └── EncryptionUtils.java
+    │           ├── collection/
+    │           │   ├── CollectionUtils.java
+    │           │   └── StreamUtils.java
+    │           ├── json/
+    │           │   ├── JsonUtils.java
+    │           │   └── ObjectMapperFactory.java
+    │           ├── image/
+    │           │   ├── ImageUtils.java
+    │           │   ├── ImageResizer.java
+    │           │   └── ImageValidator.java
+    │           ├── location/
+    │           │   ├── GeoUtils.java
+    │           │   ├── DistanceCalculator.java
+    │           │   └── LocationValidator.java
+    │           └── performance/
+    │               ├── PerformanceUtils.java
+    │               ├── BenchmarkUtils.java
+    │               └── ProfilerUtils.java
+    │
+    ├── build-tools/
+    │   ├── code-quality/
+    │   │   ├── checkstyle/
+    │   │   │   ├── checkstyle.xml
+    │   │   │   └── suppressions.xml
+    │   │   ├── spotbugs/
+    │   │   │   ├── findbugs-include.xml
+    │   │   │   └── findbugs-exclude.xml
+    │   │   ├── pmd/
+    │   │   │   └── pmd-ruleset.xml
+    │   │   └── sonar/
+    │   │       └── sonar-project.properties
+    │   ├── performance/
+    │   │   ├── jmeter/
+    │   │   │   ├── trade-load-test.jmx
+    │   │   │   └── search-load-test.jmx
+    │   │   ├── gatling/
+    │   │   │   ├── TradeSimulation.scala
+    │   │   │   └── SearchSimulation.scala
+    │   │   └── k6/
+    │   │       ├── load-test.js
+    │   │       └── stress-test.js
+    │   └── security/
+    │       ├── dependency-check/
+    │       │   └── dependency-check-config.xml
+    │       ├── snyk/
+    │       │   └── .snyk
+    │       └── owasp-zap/
+    │           └── zap-config.xml
+    │
+    ├── deployment/
+    │   ├── terraform/
+    │   │   ├── modules/
+    │   │   │   ├── vpc/
+    │   │   │   ├── eks/
+    │   │   │   ├── rds/
+    │   │   │   ├── elasticache/
+    │   │   │   ├── elasticsearch/
+    │   │   │   └── monitoring/
+    │   │   └── environments/
+    │   │       ├── dev/
+    │   │       ├── staging/
+    │   │       └── production/
+    │   ├── helm/
+    │   │   ├── charts/
+    │   │   │   ├── daangn-platform/
+    │   │   │   ├── trade-service/
+    │   │   │   ├── payment-service/
+    │   │   │   └── monitoring/
+    │   │   └── values/
+    │   │       ├── dev-values.yaml
+    │   │       ├── staging-values.yaml
+    │   │       └── production-values.yaml
+    │   ├── ci-cd/
+    │   │   ├── github-actions/
+    │   │   │   ├── build.yml
+    │   │   │   ├── test.yml
+    │   │   │   ├── security-scan.yml
+    │   │   │   ├── performance-test.yml
+    │   │   │   └── deploy.yml
+    │   │   ├── jenkins/
+    │   │   │   ├── Jenkinsfile
+    │   │   │   └── pipeline-config.groovy
+    │   │   └── gitops/
+    │   │       ├── argocd/
+    │   │       └── flux/
+    │   └── scripts/
+    │       ├── build/
+    │       │   ├── build-all.sh
+    │       │   ├── build-service.sh
+    │       │   └── docker-build.sh
+    │       ├── deploy/
+    │       │   ├── deploy-dev.sh
+    │       │   ├── deploy-staging.sh
+    │       │   ├── deploy-production.sh
+    │       │   └── rollback.sh
+    │       ├── database/
+    │       │   ├── init-shards.sh
+    │       │   ├── migrate-schema.sh
+    │       │   ├── backup-data.sh
+    │       │   └── restore-data.sh
+    │       └── monitoring/
+    │           ├── setup-prometheus.sh
+    │           ├── setup-grafana.sh
+    │           └── setup-alerts.sh
+    │
+    └── documentation/
+        ├── architecture/
+        │   ├── adr/
+        │   │   ├── 001-microservices-architecture.md
+        │   │   ├── 002-database-sharding-strategy.md
+        │   │   ├── 003-caching-strategy.md
+        │   │   ├── 004-event-driven-architecture.md
+        │   │   ├── 005-service-mesh-adoption.md
+        │   │   └── 006-monitoring-observability.md
+        │   ├── design/
+        │   │   ├── system-architecture.md
+        │   │   ├── data-architecture.md
+        │   │   ├── security-architecture.md
+        │   │   └── deployment-architecture.md
+        │   └── diagrams/
+        │       ├── system-overview.puml
+        │       ├── service-interaction.puml
+        │       ├── data-flow.puml
+        │       └── deployment-diagram.puml
+        ├── api/
+        │   ├── openapi/
+        │   │   ├── trade-service-api.yaml
+        │   │   ├── payment-service-api.yaml
+        │   │   └── user-service-api.yaml
+        │   └── postman/
+        │       ├── trade-service.json
+        │       └── integration-tests.json
+        ├── operations/
+        │   ├── runbooks/
+        │   │   ├── deployment-runbook.md
+        │   │   ├── incident-response.md
+        │   │   ├── database-operations.md
+        │   │   └── performance-tuning.md
+        │   ├── monitoring/
+        │   │   ├── metrics-guide.md
+        │   │   ├── alerting-guide.md
+        │   │   └── dashboard-guide.md
+        │   └── troubleshooting/
+        │       ├── common-issues.md
+        │       ├── performance-issues.md
+        │       └── database-issues.md
+        ├── development/
+        │   ├── setup/
+        │   │   ├── local-development.md
+        │   │   ├── docker-setup.md
+        │   │   └── testing-setup.md
+        │   ├── guidelines/
+        │   │   ├── coding-standards.md
+        │   │   ├── testing-guidelines.md
+        │   │   ├── performance-guidelines.md
+        │   │   └── security-guidelines.md
+        │   └── contribution/
+        │       ├── contributing.md
+        │       ├── code-review.md
+        │       └── release-process.md
+        └── compliance/
+            ├── security/
+            │   ├── security-assessment.md
+            │   ├── penetration-testing.md
+            │   └── compliance-checklist.md
+            ├── privacy/
+            │   ├── privacy-policy.md
+            │   ├── data-protection.md
+            │   └── gdpr-compliance.md
+            └── audit/
+                ├── audit-logs.md
+                ├── compliance-reports.md
+                └── risk-assessment.md

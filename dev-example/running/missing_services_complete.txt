@@ -1,0 +1,773 @@
+// ========================================
+// 1. HEALTHCARE-SERVICE (병원 예약) - 의료 서비스
+// ========================================
+
+microservices/domain-services/healthcare-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   ├── medical-data-security.yaml
+│   └── hipaa-compliance.yaml
+└── src/
+    ├── main/java/com/daangn/healthcare/
+    │   ├── HealthcareServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── Hospital.java
+    │   │   │   ├── Doctor.java
+    │   │   │   ├── Appointment.java
+    │   │   │   ├── MedicalDepartment.java
+    │   │   │   ├── TimeSlot.java
+    │   │   │   ├── Patient.java
+    │   │   │   ├── MedicalRecord.java
+    │   │   │   ├── Treatment.java
+    │   │   │   ├── Prescription.java
+    │   │   │   ├── AppointmentStatus.java
+    │   │   │   ├── MedicalInsurance.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── HospitalAggregate.java
+    │   │   │       ├── AppointmentAggregate.java
+    │   │   │       └── PatientAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── HospitalRepository.java
+    │   │   │   ├── DoctorRepository.java
+    │   │   │   ├── AppointmentRepository.java
+    │   │   │   ├── PatientRepository.java
+    │   │   │   ├── TimeSlotRepository.java
+    │   │   │   └── MedicalRecordRepository.java
+    │   │   ├── service/
+    │   │   │   ├── HospitalDomainService.java
+    │   │   │   ├── AppointmentDomainService.java
+    │   │   │   ├── SchedulingDomainService.java
+    │   │   │   ├── PatientDomainService.java
+    │   │   │   ├── InsuranceDomainService.java
+    │   │   │   └── MedicalRecordDomainService.java
+    │   │   └── event/
+    │   │       ├── AppointmentBookedEvent.java
+    │   │       ├── AppointmentCancelledEvent.java
+    │   │       ├── AppointmentCompletedEvent.java
+    │   │       ├── HospitalRegisteredEvent.java
+    │   │       └── PatientRegisteredEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── BookAppointmentUseCase.java
+    │   │   │   │   ├── CancelAppointmentUseCase.java
+    │   │   │   │   ├── SearchHospitalsUseCase.java
+    │   │   │   │   ├── FindAvailableSlotsUseCase.java
+    │   │   │   │   ├── RegisterHospitalUseCase.java
+    │   │   │   │   ├── ManageScheduleUseCase.java
+    │   │   │   │   └── ProcessInsuranceUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── HospitalRepositoryPort.java
+    │   │   │       ├── AppointmentRepositoryPort.java
+    │   │   │       ├── UserServicePort.java
+    │   │   │       ├── LocationServicePort.java
+    │   │   │       ├── PaymentServicePort.java
+    │   │   │       ├── NotificationServicePort.java
+    │   │   │       ├── InsuranceApiPort.java
+    │   │   │       └── MedicalSystemPort.java
+    │   │   └── service/
+    │   │       ├── AppointmentService.java
+    │   │       ├── HospitalService.java
+    │   │       ├── SchedulingService.java
+    │   │       ├── PatientService.java
+    │   │       ├── InsuranceService.java
+    │   │       └── MedicalRecordService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── AppointmentController.java
+    │   │   │   │   ├── HospitalController.java
+    │   │   │   │   ├── ScheduleController.java
+    │   │   │   │   ├── PatientController.java
+    │   │   │   │   └── InsuranceController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── UserEventConsumer.java
+    │   │   │       ├── LocationEventConsumer.java
+    │   │   │       └── PaymentEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │       │   ├── security/
+    │   │       │   │   ├── MedicalDataEncryption.java
+    │   │       │   │   ├── HipaaComplianceRepository.java
+    │   │       │   │   └── AuditLogRepository.java
+    │   │       │   ├── sharding/
+    │   │       │   │   ├── HospitalShardingStrategy.java
+    │   │       │   │   └── PatientShardingStrategy.java
+    │   │       │   └── cache/
+    │   │       │       ├── HospitalCacheAdapter.java
+    │   │       │       ├── ScheduleCacheAdapter.java
+    │   │       │       └── AppointmentCacheAdapter.java
+    │   │       │
+    │   │       ├── external/
+    │   │       │   ├── medical/
+    │   │       │   │   ├── HospitalManagementSystemAdapter.java
+    │   │       │   │   ├── ElectronicMedicalRecordAdapter.java
+    │   │       │   │   └── DoctalkAdapter.java (닥톡 연동)
+    │   │       │   ├── insurance/
+    │   │       │   │   ├── HealthInsuranceAdapter.java
+    │   │       │   │   ├── PrivateInsuranceAdapter.java
+    │   │       │   │   └── GovernmentInsuranceAdapter.java
+    │   │       │   └── certification/
+    │   │       │       ├── MedicalLicenseVerificationAdapter.java
+    │   │       │       └── HospitalCertificationAdapter.java
+    │   │       │
+    │   │       └── notification/
+    │   │           ├── AppointmentReminderAdapter.java
+    │   │           ├── ScheduleChangeNotificationAdapter.java
+    │   │           └── MedicalAlertAdapter.java
+    │   │
+    │   ├── infrastructure/
+    │   │   ├── medical/
+    │   │   │   ├── MedicalDataSecurityConfig.java
+    │   │   │   ├── HipaaComplianceConfig.java
+    │   │   │   ├── MedicalRecordConfig.java
+    │   │   │   └── PatientPrivacyConfig.java
+    │   │   ├── scheduling/
+    │   │   │   ├── AppointmentSchedulingConfig.java
+    │   │   │   ├── TimeSlotManagementConfig.java
+    │   │   │   └── CalendarIntegrationConfig.java
+    │   │   ├── integration/
+    │   │   │   ├── HospitalSystemIntegrationConfig.java
+    │   │   │   ├── InsuranceSystemConfig.java
+    │   │   │   └── MedicalApiConfig.java
+    │   │   └── monitoring/
+    │   │       ├── HealthcareMetrics.java
+    │   │       ├── AppointmentMetrics.java
+    │   │       ├── MedicalComplianceMetrics.java
+    │   │       └── PatientSafetyMetrics.java
+
+// ========================================
+// 2. BRAND-SERVICE (브랜드프로필) - 프랜차이즈 관리
+// ========================================
+
+microservices/domain-services/brand-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   └── multi-tenant-config.yaml
+└── src/
+    ├── main/java/com/daangn/brand/
+    │   ├── BrandServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── Brand.java
+    │   │   │   ├── BrandProfile.java
+    │   │   │   ├── Franchise.java
+    │   │   │   ├── BranchStore.java
+    │   │   │   ├── BrandCategory.java
+    │   │   │   ├── BrandImage.java
+    │   │   │   ├── BrandPromotion.java
+    │   │   │   ├── BrandAdvertisement.java
+    │   │   │   ├── BrandAnalytics.java
+    │   │   │   ├── BrandSubscription.java
+    │   │   │   ├── TerritoryManagement.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── BrandAggregate.java
+    │   │   │       ├── FranchiseAggregate.java
+    │   │   │       └── PromotionAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── BrandRepository.java
+    │   │   │   ├── FranchiseRepository.java
+    │   │   │   ├── BranchStoreRepository.java
+    │   │   │   ├── PromotionRepository.java
+    │   │   │   └── AnalyticsRepository.java
+    │   │   ├── service/
+    │   │   │   ├── BrandDomainService.java
+    │   │   │   ├── FranchiseDomainService.java
+    │   │   │   ├── PromotionDomainService.java
+    │   │   │   ├── AnalyticsDomainService.java
+    │   │   │   ├── TerritoryDomainService.java
+    │   │   │   └── SubscriptionDomainService.java
+    │   │   └── event/
+    │   │       ├── BrandRegisteredEvent.java
+    │   │       ├── FranchiseCreatedEvent.java
+    │   │       ├── PromotionStartedEvent.java
+    │   │       ├── BranchStoreOpenedEvent.java
+    │   │       └── SubscriptionUpdatedEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── RegisterBrandUseCase.java
+    │   │   │   │   ├── CreateFranchiseUseCase.java
+    │   │   │   │   ├── ManageBranchStoresUseCase.java
+    │   │   │   │   ├── CreatePromotionUseCase.java
+    │   │   │   │   ├── ManageSubscriptionUseCase.java
+    │   │   │   │   ├── AnalyzeBrandPerformanceUseCase.java
+    │   │   │   │   └── ManageTerritoryUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── BrandRepositoryPort.java
+    │   │   │       ├── BusinessServicePort.java
+    │   │   │       ├── LocationServicePort.java
+    │   │   │       ├── PaymentServicePort.java
+    │   │   │       ├── AnalyticsServicePort.java
+    │   │   │       ├── NotificationServicePort.java
+    │   │   │       └── AdvertisementServicePort.java
+    │   │   └── service/
+    │   │       ├── BrandService.java
+    │   │       ├── FranchiseService.java
+    │   │       ├── PromotionService.java
+    │   │       ├── BrandAnalyticsService.java
+    │   │       ├── TerritoryService.java
+    │   │       └── SubscriptionService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── BrandController.java
+    │   │   │   │   ├── FranchiseController.java
+    │   │   │   │   ├── PromotionController.java
+    │   │   │   │   ├── AnalyticsController.java
+    │   │   │   │   └── SubscriptionController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── BusinessEventConsumer.java
+    │   │   │       ├── LocationEventConsumer.java
+    │   │   │       └── PaymentEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │       │   ├── multitenancy/
+    │   │       │   │   ├── TenantContextHolder.java
+    │   │       │   │   ├── MultiTenantDataSource.java
+    │   │       │   │   └── TenantResolver.java
+    │   │       │   ├── analytics/
+    │   │       │   │   ├── BrandAnalyticsRepository.java
+    │   │       │   │   ├── PerformanceMetricsRepository.java
+    │   │       │   │   └── SalesAnalyticsRepository.java
+    │   │       │   └── cache/
+    │   │       │       ├── BrandCacheAdapter.java
+    │   │       │       ├── FranchiseCacheAdapter.java
+    │   │       │       └── PromotionCacheAdapter.java
+    │   │       │
+    │   │       ├── external/
+    │   │       │   ├── BusinessServiceAdapter.java
+    │   │       │   ├── LocationServiceAdapter.java
+    │   │       │   ├── PaymentServiceAdapter.java
+    │   │       │   ├── AnalyticsServiceAdapter.java
+    │   │       │   └── AdvertisementServiceAdapter.java
+    │   │       │
+    │   │       └── batch/
+    │   │           ├── BrandAnalyticsBatchAdapter.java
+    │   │           ├── PromotionManagementBatchAdapter.java
+    │   │           └── SubscriptionBillingBatchAdapter.java
+
+// ========================================
+// 3. GIFT-SERVICE (선물하기) - 선물 서비스
+// ========================================
+
+microservices/domain-services/gift-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   └── gift-inventory-config.yaml
+└── src/
+    ├── main/java/com/daangn/gift/
+    │   ├── GiftServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── Gift.java
+    │   │   │   ├── GiftCard.java
+    │   │   │   ├── GiftOrder.java
+    │   │   │   ├── GiftMessage.java
+    │   │   │   ├── GiftCategory.java
+    │   │   │   ├── GiftStatus.java
+    │   │   │   ├── GiftVoucher.java
+    │   │   │   ├── GiftInventory.java
+    │   │   │   ├── GiftRedemption.java
+    │   │   │   ├── GiftExpiration.java
+    │   │   │   ├── GiftNotification.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── GiftAggregate.java
+    │   │   │       ├── GiftOrderAggregate.java
+    │   │   │       └── GiftInventoryAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── GiftRepository.java
+    │   │   │   ├── GiftOrderRepository.java
+    │   │   │   ├── GiftCardRepository.java
+    │   │   │   ├── VoucherRepository.java
+    │   │   │   └── InventoryRepository.java
+    │   │   ├── service/
+    │   │   │   ├── GiftDomainService.java
+    │   │   │   ├── GiftOrderDomainService.java
+    │   │   │   ├── VoucherDomainService.java
+    │   │   │   ├── InventoryDomainService.java
+    │   │   │   ├── RedemptionDomainService.java
+    │   │   │   └── ExpirationDomainService.java
+    │   │   └── event/
+    │   │       ├── GiftSentEvent.java
+    │   │       ├── GiftReceivedEvent.java
+    │   │       ├── GiftRedeemedEvent.java
+    │   │       ├── GiftExpiredEvent.java
+    │   │       └── InventoryUpdatedEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── SendGiftUseCase.java
+    │   │   │   │   ├── ReceiveGiftUseCase.java
+    │   │   │   │   ├── RedeemGiftUseCase.java
+    │   │   │   │   ├── ManageInventoryUseCase.java
+    │   │   │   │   ├── CreateGiftCardUseCase.java
+    │   │   │   │   └── ProcessExpirationUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── GiftRepositoryPort.java
+    │   │   │       ├── UserServicePort.java
+    │   │   │       ├── PaymentServicePort.java
+    │   │   │       ├── NotificationServicePort.java
+    │   │   │       ├── InventoryServicePort.java
+    │   │   │       └── BusinessServicePort.java
+    │   │   └── service/
+    │   │       ├── GiftService.java
+    │   │       ├── GiftOrderService.java
+    │   │       ├── VoucherService.java
+    │   │       ├── InventoryService.java
+    │   │       ├── RedemptionService.java
+    │   │       └── ExpirationService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── GiftController.java
+    │   │   │   │   ├── GiftOrderController.java
+    │   │   │   │   ├── VoucherController.java
+    │   │   │   │   ├── RedemptionController.java
+    │   │   │   │   └── InventoryController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── UserEventConsumer.java
+    │   │   │       ├── PaymentEventConsumer.java
+    │   │   │       └── BusinessEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │       │   ├── inventory/
+    │   │       │   │   ├── GiftInventoryRepository.java
+    │   │       │   │   ├── StockManagementRepository.java
+    │   │       │   │   └── ExpirationTrackingRepository.java
+    │   │       │   └── cache/
+    │   │       │       ├── GiftCacheAdapter.java
+    │   │       │       ├── InventoryCacheAdapter.java
+    │   │       │       └── VoucherCacheAdapter.java
+    │   │       │
+    │   │       ├── external/
+    │   │       │   ├── UserServiceAdapter.java
+    │   │       │   ├── PaymentServiceAdapter.java
+    │   │       │   ├── NotificationServiceAdapter.java
+    │   │       │   └── BusinessServiceAdapter.java
+    │   │       │
+    │   │       └── batch/
+    │   │           ├── GiftExpirationBatchAdapter.java
+    │   │           ├── InventoryManagementBatchAdapter.java
+    │   │           └── GiftAnalyticsBatchAdapter.java
+
+// ========================================
+// 4. DELIVERY-SERVICE (배송/택배) - 배송 관리
+// ========================================
+
+microservices/domain-services/delivery-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   └── logistics-config.yaml
+└── src/
+    ├── main/java/com/daangn/delivery/
+    │   ├── DeliveryServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── Delivery.java
+    │   │   │   ├── DeliveryOrder.java
+    │   │   │   ├── ConvenienceStore.java
+    │   │   │   ├── DeliveryMethod.java
+    │   │   │   ├── DeliveryStatus.java
+    │   │   │   ├── TrackingInfo.java
+    │   │   │   ├── DeliveryAddress.java
+    │   │   │   ├── DeliveryFee.java
+    │   │   │   ├── PackageInfo.java
+    │   │   │   ├── DeliveryRoute.java
+    │   │   │   ├── DeliveryPartner.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── DeliveryAggregate.java
+    │   │   │       ├── DeliveryOrderAggregate.java
+    │   │   │       └── LogisticsAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── DeliveryRepository.java
+    │   │   │   ├── DeliveryOrderRepository.java
+    │   │   │   ├── ConvenienceStoreRepository.java
+    │   │   │   ├── TrackingRepository.java
+    │   │   │   └── DeliveryPartnerRepository.java
+    │   │   ├── service/
+    │   │   │   ├── DeliveryDomainService.java
+    │   │   │   ├── TrackingDomainService.java
+    │   │   │   ├── RoutingDomainService.java
+    │   │   │   ├── FeeCalculationDomainService.java
+    │   │   │   ├── PartnerDomainService.java
+    │   │   │   └── LogisticsDomainService.java
+    │   │   └── event/
+    │   │       ├── DeliveryRequestedEvent.java
+    │   │       ├── DeliveryStartedEvent.java
+    │   │       ├── DeliveryCompletedEvent.java
+    │   │       ├── TrackingUpdatedEvent.java
+    │   │       └── DeliveryFailedEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── RequestDeliveryUseCase.java
+    │   │   │   │   ├── TrackDeliveryUseCase.java
+    │   │   │   │   ├── UpdateDeliveryStatusUseCase.java
+    │   │   │   │   ├── CalculateDeliveryFeeUseCase.java
+    │   │   │   │   ├── FindNearbyStoresUseCase.java
+    │   │   │   │   └── ManageDeliveryPartnersUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── DeliveryRepositoryPort.java
+    │   │   │       ├── TradeServicePort.java
+    │   │   │       ├── LocationServicePort.java
+    │   │   │       ├── PaymentServicePort.java
+    │   │   │       ├── NotificationServicePort.java
+    │   │   │       ├── LogisticsApiPort.java
+    │   │   │       └── ConvenienceStoreApiPort.java
+    │   │   └── service/
+    │   │       ├── DeliveryService.java
+    │   │       ├── TrackingService.java
+    │   │       ├── RoutingService.java
+    │   │       ├── FeeCalculationService.java
+    │   │       ├── PartnerService.java
+    │   │       └── LogisticsService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── DeliveryController.java
+    │   │   │   │   ├── TrackingController.java
+    │   │   │   │   ├── ConvenienceStoreController.java
+    │   │   │   │   ├── FeeCalculationController.java
+    │   │   │   │   └── PartnerController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── TradeEventConsumer.java
+    │   │   │       ├── PaymentEventConsumer.java
+    │   │   │       └── LocationEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │       │   ├── tracking/
+    │   │   │   │   ├── TrackingRepository.java
+    │   │   │   │   ├── DeliveryHistoryRepository.java
+    │   │   │   │   └── RouteOptimizationRepository.java
+    │   │   │   └── cache/
+    │   │   │       ├── DeliveryCacheAdapter.java
+    │   │   │       ├── TrackingCacheAdapter.java
+    │   │   │       └── StoreCacheAdapter.java
+    │   │   │
+    │   │   ├── external/
+    │   │   │   ├── logistics/
+    │   │   │   │   ├── CjLogisticsAdapter.java
+    │   │   │   │   ├── HanjinLogisticsAdapter.java
+    │   │   │   │   └── LotteLogisticsAdapter.java
+    │   │   │   ├── conveniencestore/
+    │   │   │   │   ├── Gs25Adapter.java
+    │   │   │   │   ├── CuAdapter.java
+    │   │   │   │   ├── SevenElevenAdapter.java
+    │   │   │   │   └── EmartAdapter.java
+    │   │   │   └── routing/
+    │   │   │       ├── NaverMapRoutingAdapter.java
+    │   │   │       ├── KakaoMapRoutingAdapter.java
+    │   │   │       └── GoogleMapRoutingAdapter.java
+    │   │   │
+    │   │   └── batch/
+    │   │       ├── DeliveryStatusUpdateBatchAdapter.java
+    │   │       ├── RouteOptimizationBatchAdapter.java
+    │   │       └── DeliveryAnalyticsBatchAdapter.java
+
+// ========================================
+// 5. NOTIFICATION-SERVICE (알림) - 통합 알림 서비스
+// ========================================
+
+microservices/support-services/notification-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   └── notification-channels-config.yaml
+└── src/
+    ├── main/java/com/daangn/notification/
+    │   ├── NotificationServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── Notification.java
+    │   │   │   ├── NotificationType.java
+    │   │   │   ├── NotificationChannel.java
+    │   │   │   ├── NotificationTemplate.java
+    │   │   │   ├── PushNotification.java
+    │   │   │   ├── EmailNotification.java
+    │   │   │   ├── SmsNotification.java
+    │   │   │   ├── InAppNotification.java
+    │   │   │   ├── NotificationPreference.java
+    │   │   │   ├── NotificationSchedule.java
+    │   │   │   ├── NotificationStatus.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── NotificationAggregate.java
+    │   │   │       ├── TemplateAggregate.java
+    │   │   │       └── PreferenceAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── NotificationRepository.java
+    │   │   │   ├── TemplateRepository.java
+    │   │   │   ├── PreferenceRepository.java
+    │   │   │   ├── ScheduleRepository.java
+    │   │   │   └── DeliveryLogRepository.java
+    │   │   ├── service/
+    │   │   │   ├── NotificationDomainService.java
+    │   │   │   ├── TemplateDomainService.java
+    │   │   │   ├── PreferenceDomainService.java
+    │   │   │   ├── SchedulingDomainService.java
+    │   │   │   ├── DeliveryDomainService.java
+    │   │   │   └── PersonalizationDomainService.java
+    │   │   └── event/
+    │   │       ├── NotificationSentEvent.java
+    │   │       ├── NotificationDeliveredEvent.java
+    │   │       ├── NotificationFailedEvent.java
+    │   │       ├── PreferenceUpdatedEvent.java
+    │   │       └── TemplateUpdatedEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── SendNotificationUseCase.java
+    │   │   │   │   ├── SendBulkNotificationUseCase.java
+    │   │   │   │   ├── ScheduleNotificationUseCase.java
+    │   │   │   │   ├── ManagePreferencesUseCase.java
+    │   │   │   │   ├── CreateTemplateUseCase.java
+    │   │   │   │   └── TrackDeliveryUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── NotificationRepositoryPort.java
+    │   │   │       ├── PushServicePort.java
+    │   │   │       ├── EmailServicePort.java
+    │   │   │       ├── SmsServicePort.java
+    │   │   │       ├── UserServicePort.java
+    │   │   │       ├── TemplateServicePort.java
+    │   │   │       └── AnalyticsServicePort.java
+    │   │   └── service/
+    │   │       ├── NotificationService.java
+    │   │       ├── BulkNotificationService.java
+    │   │       ├── SchedulingService.java
+    │   │       ├── PreferenceService.java
+    │   │       ├── TemplateService.java
+    │   │       ├── DeliveryTrackingService.java
+    │   │       └── PersonalizationService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── NotificationController.java
+    │   │   │   │   ├── TemplateController.java
+    │   │   │   │   ├── PreferenceController.java
+    │   │   │   │   ├── ScheduleController.java
+    │   │   │   │   └── AnalyticsController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── TradeEventConsumer.java
+    │   │   │       ├── ChatEventConsumer.java
+    │   │   │       ├── PaymentEventConsumer.java
+    │   │   │       ├── UserEventConsumer.java
+    │   │   │       ├── ReviewEventConsumer.java
+    │   │   │       ├── AppointmentEventConsumer.java
+    │   │   │       └── DeliveryEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │   │   ├── template/
+    │   │   │   │   ├── NotificationTemplateRepository.java
+    │   │   │   │   ├── TemplateVersioningRepository.java
+    │   │   │   │   └── TemplateAnalyticsRepository.java
+    │   │   │   ├── preference/
+    │   │   │   │   ├── UserPreferenceRepository.java
+    │   │   │   │   ├── ChannelPreferenceRepository.java
+    │   │   │   │   └── OptOutRepository.java
+    │   │   │   ├── delivery/
+    │   │   │   │   ├── DeliveryLogRepository.java
+    │   │   │   │   ├── DeliveryStatusRepository.java
+    │   │   │   │   └── DeliveryAnalyticsRepository.java
+    │   │   │   └── cache/
+    │   │   │       ├── NotificationCacheAdapter.java
+    │   │   │       ├── TemplateCacheAdapter.java
+    │   │   │       └── PreferenceCacheAdapter.java
+    │   │   │
+    │   │   ├── external/
+    │   │   │   ├── push/
+    │   │   │   │   ├── FcmPushAdapter.java
+    │   │   │   │   ├── ApnsPushAdapter.java
+    │   │   │   │   └── OneSignalPushAdapter.java
+    │   │   │   ├── email/
+    │   │   │   │   ├── SendGridEmailAdapter.java
+    │   │   │   │   ├── MailgunEmailAdapter.java
+    │   │   │   │   └── SesEmailAdapter.java
+    │   │   │   ├── sms/
+    │   │   │   │   ├── TwilioSmsAdapter.java
+    │   │   │   │   ├── AligoSmsAdapter.java
+    │   │   │   │   └── CoolSmsAdapter.java
+    │   │   │   └── analytics/
+    │   │   │       ├── NotificationAnalyticsAdapter.java
+    │   │   │       └── DeliveryMetricsAdapter.java
+    │   │   │
+    │   │   └── batch/
+    │   │       ├── ScheduledNotificationBatchAdapter.java
+    │   │       ├── NotificationCleanupBatchAdapter.java
+    │   │       ├── DeliveryRetryBatchAdapter.java
+    │   │       └── AnalyticsBatchAdapter.java
+
+// ========================================
+// 6. MODERATION-SERVICE (콘텐츠 검수) - 자동/수동 검수
+// ========================================
+
+microservices/support-services/moderation-service/
+├── build.gradle
+├── Dockerfile
+├── k8s/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── hpa.yaml
+│   ├── ai-model-config.yaml
+│   └── content-policy-config.yaml
+└── src/
+    ├── main/java/com/daangn/moderation/
+    │   ├── ModerationServiceApplication.java
+    │   │
+    │   ├── domain/
+    │   │   ├── model/
+    │   │   │   ├── ModerationRequest.java
+    │   │   │   ├── ModerationResult.java
+    │   │   │   ├── ContentReview.java
+    │   │   │   ├── ModerationRule.java
+    │   │   │   ├── ViolationReport.java
+    │   │   │   ├── ReviewStatus.java
+    │   │   │   ├── ModerationAction.java
+    │   │   │   ├── ContentPolicy.java
+    │   │   │   ├── AutoModerationResult.java
+    │   │   │   ├── HumanReviewTask.java
+    │   │   │   ├── ModerationQueue.java
+    │   │   │   └── aggregate/
+    │   │   │       ├── ModerationAggregate.java
+    │   │   │       ├── PolicyAggregate.java
+    │   │   │       └── ViolationAggregate.java
+    │   │   ├── repository/
+    │   │   │   ├── ModerationRepository.java
+    │   │   │   ├── ContentReviewRepository.java
+    │   │   │   ├── ModerationRuleRepository.java
+    │   │   │   ├── ViolationReportRepository.java
+    │   │   │   └── PolicyRepository.java
+    │   │   ├── service/
+    │   │   │   ├── ModerationDomainService.java
+    │   │   │   ├── AutoModerationDomainService.java
+    │   │   │   ├── HumanReviewDomainService.java
+    │   │   │   ├── PolicyDomainService.java
+    │   │   │   ├── ViolationDomainService.java
+    │   │   │   └── QueueDomainService.java
+    │   │   └── event/
+    │   │       ├── ContentSubmittedEvent.java
+    │   │       ├── ModerationCompletedEvent.java
+    │   │       ├── ViolationDetectedEvent.java
+    │   │       ├── ContentApprovedEvent.java
+    │   │       ├── ContentRejectedEvent.java
+    │   │       └── PolicyUpdatedEvent.java
+    │   │
+    │   ├── application/
+    │   │   ├── port/
+    │   │   │   ├── in/
+    │   │   │   │   ├── ModerateContentUseCase.java
+    │   │   │   │   ├── ReviewContentUseCase.java
+    │   │   │   │   ├── ReportViolationUseCase.java
+    │   │   │   │   ├── ManagePolicyUseCase.java
+    │   │   │   │   ├── ProcessQueueUseCase.java
+    │   │   │   │   └── AnalyzeTrendsUseCase.java
+    │   │   │   └── out/
+    │   │   │       ├── ModerationRepositoryPort.java
+    │   │   │       ├── AiModerationServicePort.java
+    │   │   │       ├── ImageAnalysisServicePort.java
+    │   │   │       ├── TextAnalysisServicePort.java
+    │   │   │       ├── UserServicePort.java
+    │   │   │       ├── NotificationServicePort.java
+    │   │   │       └── AnalyticsServicePort.java
+    │   │   └── service/
+    │   │       ├── ModerationService.java
+    │   │       ├── AutoModerationService.java
+    │   │       ├── HumanReviewService.java
+    │   │       ├── PolicyService.java
+    │   │       ├── ViolationService.java
+    │   │       ├── QueueService.java
+    │   │       └── TrendAnalysisService.java
+    │   │
+    │   ├── adapter/
+    │   │   ├── in/
+    │   │   │   ├── web/
+    │   │   │   │   ├── ModerationController.java
+    │   │   │   │   ├── ReviewController.java
+    │   │   │   │   ├── ViolationController.java
+    │   │   │   │   ├── PolicyController.java
+    │   │   │   │   └── AnalyticsController.java
+    │   │   │   └── messaging/
+    │   │   │       ├── TradeContentEventConsumer.java
+    │   │   │       ├── CommunityContentEventConsumer.java
+    │   │   │       ├── ChatContentEventConsumer.java
+    │   │   │       ├── ReviewContentEventConsumer.java
+    │   │   │       └── UserReportEventConsumer.java
+    │   │   │
+    │   │   └── out/
+    │   │       ├── persistence/
+    │   │   │   ├── queue/
+    │   │   │   │   ├── ModerationQueueRepository.java
+    │   │   │   │   ├── PriorityQueueRepository.java
+    │   │   │   │   └── WorkflowRepository.java
+    │   │   │   ├── analytics/
+    │   │   │   │   ├── ModerationAnalyticsRepository.java
+    │   │   │   │   ├── TrendAnalysisRepository.java
+    │   │   │   │   └── PolicyEffectivenessRepository.java
+    │   │   │   └── cache/
+    │   │   │       ├── ModerationCacheAdapter.java
+    │   │   │       ├── PolicyCacheAdapter.java
+    │   │   │       └── RuleCacheAdapter.java
+    │   │   │
+    │   │   ├── external/
+    │   │   │   ├── ai/
+    │   │   │   │   ├── OpenAiModerationAdapter.java
+    │   │   │   │   ├── GoogleCloudAiAdapter.java
+    │   │   │   │   ├── NaverClovaAiAdapter.java
+    │   │   │   │   └── CustomMlModelAdapter.java
+    │   │   │   ├── image/
+    │   │   │   │   ├── GoogleVisionApiAdapter.java
+    │   │   │   │   ├── AmazonRekognitionAdapter.java
+    │   │   │   │   └── NaverClovaOcrAdapter.java
+    │   │   │   ├── text/
+    │   │   │   │   ├── BadWordFilterAdapter.java
+    │   │   │   │   ├── SpamDetectionAdapter.java
+    │   │   │   │   └── SentimentAnalysisAdapter.java
+    │   │   │   └── human/
+    │   │   │       ├── ModerationTeamAdapter.java
+    │   │   │       ├── CrowdsourcingAdapter.java
+    │   │   │       └── ExternalModerationAdapter.java
+    │   │   │
+    │   │   └── batch/
+    │   │       ├── AutoModerationBatchAdapter.java
+    │   │       ├── QueueProcessingBatchAdapter.java
+    │   │       ├── PolicyUpdateBatchAdapter.java
+    │   │       └── AnalyticsBatchAdapter.java
