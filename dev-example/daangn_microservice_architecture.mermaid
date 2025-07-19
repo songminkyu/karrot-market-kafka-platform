@@ -1,0 +1,217 @@
+graph TB
+    %% API Gateway & Load Balancer
+    ALB[Application Load Balancer]
+    AG[API Gateway<br/>Spring Cloud Gateway]
+    
+    %% Core Domain Services - 중고거래 (가장 핵심)
+    subgraph "Trade Domain - 중고거래"
+        TS[Trade Service<br/>상품 등록/조회/거래]
+        CS[Chat Service<br/>실시간 채팅]
+        RS[Review Service<br/>매너온도/리뷰]
+        PS[Payment Service<br/>당근페이]
+    end
+    
+    %% Community Domain Services - 동네생활
+    subgraph "Community Domain - 동네생활"
+        CNS[Community News Service<br/>동네생활 게시판]
+        QAS[Q&A Service<br/>동네 질문답변]
+        MS[Meeting Service<br/>당근모임/반짝모임]
+        NFS[Notification Service<br/>실종/분실신고]
+    end
+    
+    %% Job Domain Services - 당근알바
+    subgraph "Job Domain - 당근알바"
+        JS[Job Service<br/>구인구직]
+        JAS[Job Application Service<br/>지원/매칭]
+        JRS[Job Review Service<br/>리뷰/평가]
+    end
+    
+    %% Real Estate Domain Services - 당근부동산
+    subgraph "Real Estate Domain - 당근부동산"
+        RES[Real Estate Service<br/>부동산 매물]
+        RTS[Real Estate Trade Service<br/>부동산 거래]
+        RLS[Real Estate Location Service<br/>위치/지역정보]
+    end
+    
+    %% Car Domain Services - 당근중고차
+    subgraph "Car Domain - 당근중고차"
+        CAS[Car Service<br/>중고차 매물]
+        CIS[Car Inspection Service<br/>차량 검증]
+        CTS[Car Trade Service<br/>중고차 거래]
+    end
+    
+    %% Business Domain Services - 동네업체/내근처
+    subgraph "Business Domain - 동네업체"
+        BS[Business Service<br/>업체 프로필]
+        BAS[Business Ad Service<br/>광고/홍보]
+        BRS[Business Reservation Service<br/>예약 시스템]
+        BPS[Business Payment Service<br/>업체 결제]
+    end
+    
+    %% Location Domain Services - 동네지도/위치
+    subgraph "Location Domain - 위치서비스"
+        LS[Location Service<br/>동네 인증/지역정보]
+        MS2[Map Service<br/>지도/상권정보]
+        GS[Geo Service<br/>위치 기반 검색]
+    end
+    
+    %% User Domain Services
+    subgraph "User Domain - 사용자"
+        US[User Service<br/>사용자 관리]
+        AS[Auth Service<br/>인증/인가]
+        PRS[Profile Service<br/>프로필 관리]
+        FS[Follow Service<br/>이웃 관계]
+    end
+    
+    %% Support Domain Services
+    subgraph "Support Domain - 지원서비스"
+        NOS[Notification Service<br/>알림]
+        SS[Search Service<br/>통합 검색]
+        MNS[Moderation Service<br/>콘텐츠 검수]
+        LGS[Log Service<br/>로깅/모니터링]
+    end
+    
+    %% Infrastructure Services
+    subgraph "Infrastructure - 인프라"
+        RDB[(MySQL/PostgreSQL<br/>관계형 DB)]
+        REDIS[(Redis<br/>캐시/세션)]
+        MONGO[(MongoDB<br/>로그/채팅)]
+        ES[(Elasticsearch<br/>검색엔진)]
+        KAFKA[Apache Kafka<br/>메시지 큐]
+        S3[AWS S3<br/>파일 저장소]
+        CDN[CloudFront CDN<br/>정적 자원]
+    end
+    
+    %% External Services
+    subgraph "External APIs - 외부 서비스"
+        MAPS[Naver/Kakao Maps API]
+        SMS[SMS/PUSH 서비스]
+        BANK[은행 API<br/>계좌 연동]
+        PG[PG사 API<br/>결제 게이트웨이]
+        OCR[OCR API<br/>신분증 인식]
+    end
+    
+    %% Client Applications
+    subgraph "Client Applications"
+        MOBILE[Mobile App<br/>Android/iOS]
+        WEB[Web Application<br/>React]
+        ADMIN[Admin Dashboard<br/>관리자]
+    end
+    
+    %% Connections
+    MOBILE --> ALB
+    WEB --> ALB
+    ADMIN --> ALB
+    ALB --> AG
+    
+    %% API Gateway to Services
+    AG --> TS
+    AG --> CS
+    AG --> RS
+    AG --> PS
+    AG --> CNS
+    AG --> QAS
+    AG --> MS
+    AG --> NFS
+    AG --> JS
+    AG --> JAS
+    AG --> JRS
+    AG --> RES
+    AG --> RTS
+    AG --> RLS
+    AG --> CAS
+    AG --> CIS
+    AG --> CTS
+    AG --> BS
+    AG --> BAS
+    AG --> BRS
+    AG --> BPS
+    AG --> LS
+    AG --> MS2
+    AG --> GS
+    AG --> US
+    AG --> AS
+    AG --> PRS
+    AG --> FS
+    AG --> NOS
+    AG --> SS
+    AG --> MNS
+    AG --> LGS
+    
+    %% Service to Infrastructure
+    TS --> RDB
+    TS --> REDIS
+    TS --> KAFKA
+    TS --> S3
+    CS --> MONGO
+    CS --> REDIS
+    CS --> KAFKA
+    RS --> RDB
+    PS --> RDB
+    PS --> REDIS
+    CNS --> RDB
+    CNS --> KAFKA
+    QAS --> RDB
+    MS --> RDB
+    MS --> KAFKA
+    NFS --> RDB
+    JS --> RDB
+    JS --> ES
+    JAS --> RDB
+    JRS --> RDB
+    RES --> RDB
+    RES --> ES
+    RTS --> RDB
+    RLS --> RDB
+    CAS --> RDB
+    CAS --> ES
+    CIS --> RDB
+    CTS --> RDB
+    BS --> RDB
+    BS --> ES
+    BAS --> RDB
+    BRS --> RDB
+    BPS --> RDB
+    LS --> RDB
+    LS --> REDIS
+    MS2 --> RDB
+    GS --> RDB
+    GS --> ES
+    US --> RDB
+    US --> REDIS
+    AS --> REDIS
+    PRS --> RDB
+    PRS --> S3
+    FS --> RDB
+    NOS --> KAFKA
+    NOS --> REDIS
+    SS --> ES
+    MNS --> RDB
+    MNS --> KAFKA
+    LGS --> MONGO
+    
+    %% External API Connections
+    LS --> MAPS
+    MS2 --> MAPS
+    NOS --> SMS
+    PS --> BANK
+    PS --> PG
+    AS --> OCR
+    
+    %% CDN Connection
+    S3 --> CDN
+    CDN --> MOBILE
+    CDN --> WEB
+
+    %% Styling
+    classDef coreService fill:#ff6b6b,stroke:#d63031,stroke-width:3px,color:#fff
+    classDef domainService fill:#74b9ff,stroke:#0984e3,stroke-width:2px,color:#fff
+    classDef infraService fill:#55a3ff,stroke:#2f3542,stroke-width:2px,color:#fff
+    classDef externalService fill:#ffeaa7,stroke:#fdcb6e,stroke-width:2px,color:#000
+    classDef clientApp fill:#fd79a8,stroke:#e84393,stroke-width:2px,color:#fff
+    
+    class TS,CS,RS,PS coreService
+    class CNS,QAS,MS,NFS,JS,JAS,JRS,RES,RTS,RLS,CAS,CIS,CTS,BS,BAS,BRS,BPS,LS,MS2,GS,US,AS,PRS,FS,NOS,SS,MNS,LGS domainService
+    class RDB,REDIS,MONGO,ES,KAFKA,S3,CDN infraService
+    class MAPS,SMS,BANK,PG,OCR externalService
+    class MOBILE,WEB,ADMIN clientApp

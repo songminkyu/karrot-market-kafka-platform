@@ -1,0 +1,750 @@
+daangn-microservices/
+├── README.md
+├── docker-compose.yml
+├── kubernetes/
+│   ├── namespaces/
+│   ├── deployments/
+│   ├── services/
+│   ├── ingress/
+│   └── configmaps/
+├── gradle/
+│   └── wrapper/
+├── gradlew
+├── gradlew.bat
+├── settings.gradle
+├── build.gradle
+└── microservices/
+    │
+    ├── infrastructure/
+    │   ├── api-gateway/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/gateway/
+    │   │       ├── GatewayApplication.java
+    │   │       ├── config/
+    │   │       │   ├── GatewayConfig.java
+    │   │       │   ├── SecurityConfig.java
+    │   │       │   └── RateLimitConfig.java
+    │   │       ├── filter/
+    │   │       │   ├── AuthenticationFilter.java
+    │   │       │   ├── LoggingFilter.java
+    │   │       │   └── RateLimitFilter.java
+    │   │       └── route/
+    │   │           └── RouteConfiguration.java
+    │   │
+    │   ├── service-discovery/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/discovery/
+    │   │       ├── DiscoveryServerApplication.java
+    │   │       └── config/
+    │   │           └── EurekaConfig.java
+    │   │
+    │   └── config-server/
+    │       ├── build.gradle
+    │       ├── Dockerfile
+    │       └── src/main/java/com/daangn/config/
+    │           ├── ConfigServerApplication.java
+    │           └── config/
+    │               └── ConfigServerConfig.java
+    │
+    ├── core-domain/
+    │   │
+    │   ├── trade-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/
+    │   │       ├── main/java/com/daangn/trade/
+    │   │       │   ├── TradeServiceApplication.java
+    │   │       │   ├── domain/
+    │   │       │   │   ├── model/
+    │   │       │   │   │   ├── Trade.java
+    │   │       │   │   │   ├── Product.java
+    │   │       │   │   │   ├── Category.java
+    │   │       │   │   │   ├── TradeStatus.java
+    │   │       │   │   │   └── ProductCondition.java
+    │   │       │   │   ├── repository/
+    │   │       │   │   │   ├── TradeRepository.java
+    │   │       │   │   │   ├── ProductRepository.java
+    │   │       │   │   │   └── CategoryRepository.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── TradeDomainService.java
+    │   │       │   │       ├── ProductDomainService.java
+    │   │       │   │       └── CategoryDomainService.java
+    │   │       │   ├── application/
+    │   │       │   │   ├── port/
+    │   │       │   │   │   ├── in/
+    │   │       │   │   │   │   ├── TradeUseCase.java
+    │   │       │   │   │   │   ├── ProductUseCase.java
+    │   │       │   │   │   │   └── SearchUseCase.java
+    │   │       │   │   │   └── out/
+    │   │       │   │   │       ├── TradeRepositoryPort.java
+    │   │       │   │   │       ├── ProductRepositoryPort.java
+    │   │       │   │   │       ├── PaymentServicePort.java
+    │   │       │   │   │       ├── UserServicePort.java
+    │   │       │   │   │       ├── LocationServicePort.java
+    │   │       │   │   │       └── NotificationServicePort.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── TradeService.java
+    │   │       │   │       ├── ProductService.java
+    │   │       │   │       └── SearchService.java
+    │   │       │   ├── adapter/
+    │   │       │   │   ├── in/
+    │   │       │   │   │   ├── web/
+    │   │       │   │   │   │   ├── TradeController.java
+    │   │       │   │   │   │   ├── ProductController.java
+    │   │       │   │   │   │   ├── SearchController.java
+    │   │       │   │   │   │   └── dto/
+    │   │       │   │   │   │       ├── TradeRequest.java
+    │   │       │   │   │   │       ├── TradeResponse.java
+    │   │       │   │   │   │       ├── ProductRequest.java
+    │   │       │   │   │   │       ├── ProductResponse.java
+    │   │       │   │   │   │       └── SearchRequest.java
+    │   │       │   │   │   └── messaging/
+    │   │       │   │   │       ├── TradeEventConsumer.java
+    │   │       │   │   │       └── PaymentEventConsumer.java
+    │   │       │   │   └── out/
+    │   │       │   │       ├── persistence/
+    │   │       │   │       │   ├── TradeJpaRepository.java
+    │   │       │   │       │   ├── ProductJpaRepository.java
+    │   │       │   │       │   ├── CategoryJpaRepository.java
+    │   │       │   │       │   ├── entity/
+    │   │       │   │       │   │   ├── TradeEntity.java
+    │   │       │   │       │   │   ├── ProductEntity.java
+    │   │       │   │       │   │   └── CategoryEntity.java
+    │   │       │   │       │   └── mapper/
+    │   │       │   │       │       ├── TradeMapper.java
+    │   │       │   │       │       ├── ProductMapper.java
+    │   │       │   │       │       └── CategoryMapper.java
+    │   │       │   │       ├── messaging/
+    │   │       │   │       │   ├── TradeEventPublisher.java
+    │   │       │   │       │   └── KafkaTradeEventPublisher.java
+    │   │       │   │       ├── external/
+    │   │       │   │       │   ├── PaymentServiceAdapter.java
+    │   │       │   │       │   ├── UserServiceAdapter.java
+    │   │       │   │       │   ├── LocationServiceAdapter.java
+    │   │       │   │       │   └── NotificationServiceAdapter.java
+    │   │       │   │       └── cache/
+    │   │       │   │           ├── RedisCacheAdapter.java
+    │   │       │   │           └── ProductCacheAdapter.java
+    │   │       │   └── config/
+    │   │       │       ├── DatabaseConfig.java
+    │   │       │       ├── KafkaConfig.java
+    │   │       │       ├── RedisConfig.java
+    │   │       │       ├── SecurityConfig.java
+    │   │       │       └── SwaggerConfig.java
+    │   │       └── test/
+    │   │           ├── java/com/daangn/trade/
+    │   │           │   ├── domain/
+    │   │           │   ├── application/
+    │   │           │   └── adapter/
+    │   │           └── resources/
+    │   │               ├── application-test.yml
+    │   │               └── test-data.sql
+    │   │
+    │   ├── chat-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/
+    │   │       ├── main/java/com/daangn/chat/
+    │   │       │   ├── ChatServiceApplication.java
+    │   │       │   ├── domain/
+    │   │       │   │   ├── model/
+    │   │       │   │   │   ├── ChatRoom.java
+    │   │       │   │   │   ├── Message.java
+    │   │       │   │   │   ├── MessageType.java
+    │   │       │   │   │   └── Participant.java
+    │   │       │   │   ├── repository/
+    │   │       │   │   │   ├── ChatRoomRepository.java
+    │   │       │   │   │   └── MessageRepository.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── ChatRoomDomainService.java
+    │   │       │   │       └── MessageDomainService.java
+    │   │       │   ├── application/
+    │   │       │   │   ├── port/
+    │   │       │   │   │   ├── in/
+    │   │       │   │   │   │   ├── ChatUseCase.java
+    │   │       │   │   │   │   └── MessageUseCase.java
+    │   │       │   │   │   └── out/
+    │   │       │   │   │       ├── ChatRepositoryPort.java
+    │   │       │   │   │       ├── MessageRepositoryPort.java
+    │   │       │   │   │       ├── UserServicePort.java
+    │   │       │   │   │       └── NotificationServicePort.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── ChatService.java
+    │   │       │   │       └── MessageService.java
+    │   │       │   ├── adapter/
+    │   │       │   │   ├── in/
+    │   │       │   │   │   ├── web/
+    │   │       │   │   │   │   ├── ChatController.java
+    │   │       │   │   │   │   └── MessageController.java
+    │   │       │   │   │   └── websocket/
+    │   │       │   │   │       ├── WebSocketChatHandler.java
+    │   │       │   │   │       └── WebSocketConfig.java
+    │   │       │   │   └── out/
+    │   │       │   │       ├── persistence/
+    │   │       │   │       │   ├── mongo/
+    │   │       │   │       │   │   ├── ChatRoomMongoRepository.java
+    │   │       │   │       │   │   ├── MessageMongoRepository.java
+    │   │       │   │       │   │   └── document/
+    │   │       │   │       │   │       ├── ChatRoomDocument.java
+    │   │       │   │       │   │       └── MessageDocument.java
+    │   │       │   │       │   └── redis/
+    │   │       │   │       │       └── ChatSessionRepository.java
+    │   │       │   │       ├── messaging/
+    │   │       │   │       │   └── ChatEventPublisher.java
+    │   │       │   │       └── external/
+    │   │       │   │           ├── UserServiceAdapter.java
+    │   │       │   │           └── NotificationServiceAdapter.java
+    │   │       │   └── config/
+    │   │       │       ├── MongoConfig.java
+    │   │       │       ├── RedisConfig.java
+    │   │       │       ├── WebSocketConfig.java
+    │   │       │       └── SecurityConfig.java
+    │   │       └── test/
+    │   │
+    │   ├── payment-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/
+    │   │       ├── main/java/com/daangn/payment/
+    │   │       │   ├── PaymentServiceApplication.java
+    │   │       │   ├── domain/
+    │   │       │   │   ├── model/
+    │   │       │   │   │   ├── Payment.java
+    │   │       │   │   │   ├── DaangnPay.java
+    │   │       │   │   │   ├── Wallet.java
+    │   │       │   │   │   ├── Transaction.java
+    │   │       │   │   │   ├── PaymentMethod.java
+    │   │       │   │   │   └── PaymentStatus.java
+    │   │       │   │   ├── repository/
+    │   │       │   │   │   ├── PaymentRepository.java
+    │   │       │   │   │   ├── WalletRepository.java
+    │   │       │   │   │   └── TransactionRepository.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── PaymentDomainService.java
+    │   │       │   │       ├── WalletDomainService.java
+    │   │       │   │       └── TransactionDomainService.java
+    │   │       │   ├── application/
+    │   │       │   │   ├── port/
+    │   │       │   │   │   ├── in/
+    │   │       │   │   │   │   ├── PaymentUseCase.java
+    │   │       │   │   │   │   ├── WalletUseCase.java
+    │   │       │   │   │   │   └── TransferUseCase.java
+    │   │       │   │   │   └── out/
+    │   │       │   │   │       ├── PaymentRepositoryPort.java
+    │   │       │   │   │       ├── BankApiPort.java
+    │   │       │   │   │       ├── PgApiPort.java
+    │   │       │   │   │       └── UserServicePort.java
+    │   │       │   │   └── service/
+    │   │       │   │       ├── PaymentService.java
+    │   │       │   │       ├── WalletService.java
+    │   │       │   │       └── TransferService.java
+    │   │       │   ├── adapter/
+    │   │       │   │   ├── in/
+    │   │       │   │   │   ├── web/
+    │   │       │   │   │   │   ├── PaymentController.java
+    │   │       │   │   │   │   ├── WalletController.java
+    │   │       │   │   │   │   └── TransferController.java
+    │   │       │   │   │   └── messaging/
+    │   │       │   │   │       └── PaymentEventConsumer.java
+    │   │       │   │   └── out/
+    │   │       │   │       ├── persistence/
+    │   │       │   │       │   ├── PaymentJpaRepository.java
+    │   │       │   │       │   ├── WalletJpaRepository.java
+    │   │       │   │       │   └── TransactionJpaRepository.java
+    │   │       │   │       ├── external/
+    │   │       │   │       │   ├── BankApiAdapter.java
+    │   │       │   │       │   ├── PgApiAdapter.java
+    │   │       │   │       │   └── UserServiceAdapter.java
+    │   │       │   │       └── messaging/
+    │   │       │   │           └── PaymentEventPublisher.java
+    │   │       │   └── config/
+    │   │       │       ├── DatabaseConfig.java
+    │   │       │       ├── SecurityConfig.java
+    │   │       │       └── ExternalApiConfig.java
+    │   │       └── test/
+    │   │
+    │   └── review-service/
+    │       ├── build.gradle
+    │       ├── Dockerfile
+    │       └── src/
+    │           ├── main/java/com/daangn/review/
+    │           │   ├── ReviewServiceApplication.java
+    │           │   ├── domain/
+    │           │   │   ├── model/
+    │           │   │   │   ├── Review.java
+    │           │   │   │   ├── MannerTemperature.java
+    │           │   │   │   ├── Rating.java
+    │           │   │   │   └── ReviewType.java
+    │           │   │   ├── repository/
+    │           │   │   │   └── ReviewRepository.java
+    │           │   │   └── service/
+    │           │   │       ├── ReviewDomainService.java
+    │           │   │       └── MannerTemperatureService.java
+    │           │   ├── application/
+    │           │   ├── adapter/
+    │           │   └── config/
+    │           └── test/
+    │
+    ├── domain-services/
+    │   │
+    │   ├── user-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/user/
+    │   │       ├── UserServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── User.java
+    │   │       │   │   ├── UserProfile.java
+    │   │       │   │   ├── Neighbor.java
+    │   │       │   │   ├── UserStatus.java
+    │   │       │   │   └── VerificationStatus.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── UserRepository.java
+    │   │       │   │   ├── ProfileRepository.java
+    │   │       │   │   └── NeighborRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── UserDomainService.java
+    │   │       │       ├── ProfileDomainService.java
+    │   │       │       └── NeighborDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── location-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/location/
+    │   │       ├── LocationServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Location.java
+    │   │       │   │   ├── District.java
+    │   │       │   │   ├── Neighborhood.java
+    │   │       │   │   ├── GeoPoint.java
+    │   │       │   │   └── VerificationArea.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── LocationRepository.java
+    │   │       │   │   ├── DistrictRepository.java
+    │   │       │   │   └── NeighborhoodRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── LocationDomainService.java
+    │   │       │       ├── DistrictDomainService.java
+    │   │       │       └── VerificationService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── community-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/community/
+    │   │       ├── CommunityServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Post.java
+    │   │       │   │   ├── Comment.java
+    │   │       │   │   ├── Question.java
+    │   │       │   │   ├── Answer.java
+    │   │       │   │   ├── PostType.java
+    │   │       │   │   ├── PostStatus.java
+    │   │       │   │   └── Tag.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── PostRepository.java
+    │   │       │   │   ├── CommentRepository.java
+    │   │       │   │   ├── QuestionRepository.java
+    │   │       │   │   └── AnswerRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── PostDomainService.java
+    │   │       │       ├── CommentDomainService.java
+    │   │       │       └── QuestionDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── job-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/job/
+    │   │       ├── JobServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Job.java
+    │   │       │   │   ├── JobApplication.java
+    │   │       │   │   ├── Company.java
+    │   │       │   │   ├── JobCategory.java
+    │   │       │   │   ├── JobType.java
+    │   │       │   │   ├── WorkSchedule.java
+    │   │       │   │   └── Salary.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── JobRepository.java
+    │   │       │   │   ├── JobApplicationRepository.java
+    │   │       │   │   └── CompanyRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── JobDomainService.java
+    │   │       │       ├── ApplicationDomainService.java
+    │   │       │       └── CompanyDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── real-estate-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/realestate/
+    │   │       ├── RealEstateServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Property.java
+    │   │       │   │   ├── PropertyTrade.java
+    │   │       │   │   ├── PropertyType.java
+    │   │       │   │   ├── TransactionType.java
+    │   │       │   │   ├── PropertyInfo.java
+    │   │       │   │   └── PriceInfo.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── PropertyRepository.java
+    │   │       │   │   └── PropertyTradeRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── PropertyDomainService.java
+    │   │       │       └── PropertyTradeDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── car-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/car/
+    │   │       ├── CarServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Car.java
+    │   │       │   │   ├── CarTrade.java
+    │   │       │   │   ├── CarInspection.java
+    │   │       │   │   ├── CarInfo.java
+    │   │       │   │   ├── CarCondition.java
+    │   │       │   │   ├── Brand.java
+    │   │       │   │   └── Model.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── CarRepository.java
+    │   │       │   │   ├── CarTradeRepository.java
+    │   │       │   │   └── CarInspectionRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── CarDomainService.java
+    │   │       │       ├── CarTradeDomainService.java
+    │   │       │       └── CarInspectionService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── business-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/business/
+    │   │       ├── BusinessServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Business.java
+    │   │       │   │   ├── BusinessProfile.java
+    │   │       │   │   ├── BusinessAd.java
+    │   │       │   │   ├── Reservation.java
+    │   │       │   │   ├── BusinessCategory.java
+    │   │       │   │   ├── OperatingHours.java
+    │   │       │   │   └── ServiceMenu.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── BusinessRepository.java
+    │   │       │   │   ├── BusinessAdRepository.java
+    │   │       │   │   └── ReservationRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── BusinessDomainService.java
+    │   │       │       ├── BusinessAdDomainService.java
+    │   │       │       └── ReservationDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── meeting-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/meeting/
+    │   │       ├── MeetingServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Meeting.java
+    │   │       │   │   ├── MeetingParticipant.java
+    │   │       │   │   ├── MeetingCategory.java
+    │   │       │   │   ├── MeetingType.java
+    │   │       │   │   ├── MeetingStatus.java
+    │   │       │   │   └── QuickMeeting.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── MeetingRepository.java
+    │   │       │   │   ├── ParticipantRepository.java
+    │   │       │   │   └── QuickMeetingRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── MeetingDomainService.java
+    │   │       │       ├── ParticipantDomainService.java
+    │   │       │       └── QuickMeetingDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   └── auth-service/
+    │       ├── build.gradle
+    │       ├── Dockerfile
+    │       └── src/main/java/com/daangn/auth/
+    │           ├── AuthServiceApplication.java
+    │           ├── domain/
+    │           │   ├── model/
+    │           │   │   ├── Authentication.java
+    │           │   │   ├── Authorization.java
+    │           │   │   ├── Token.java
+    │           │   │   ├── Permission.java
+    │           │   │   ├── Role.java
+    │           │   │   └── AuthProvider.java
+    │           │   ├── repository/
+    │           │   │   ├── AuthRepository.java
+    │           │   │   ├── TokenRepository.java
+    │           │   │   └── PermissionRepository.java
+    │           │   └── service/
+    │           │       ├── AuthDomainService.java
+    │           │       ├── TokenDomainService.java
+    │           │       └── PermissionDomainService.java
+    │           ├── application/
+    │           ├── adapter/
+    │           └── config/
+    │
+    ├── support-services/
+    │   │
+    │   ├── notification-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/notification/
+    │   │       ├── NotificationServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── Notification.java
+    │   │       │   │   ├── NotificationType.java
+    │   │       │   │   ├── NotificationChannel.java
+    │   │       │   │   ├── PushNotification.java
+    │   │       │   │   └── EmailNotification.java
+    │   │       │   ├── repository/
+    │   │       │   │   └── NotificationRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── NotificationDomainService.java
+    │   │       │       └── ChannelDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── search-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/search/
+    │   │       ├── SearchServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── SearchQuery.java
+    │   │       │   │   ├── SearchResult.java
+    │   │       │   │   ├── SearchFilter.java
+    │   │       │   │   ├── SearchCategory.java
+    │   │       │   │   └── SearchIndex.java
+    │   │       │   ├── repository/
+    │   │       │   │   └── SearchRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── SearchDomainService.java
+    │   │       │       └── IndexingDomainService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   ├── moderation-service/
+    │   │   ├── build.gradle
+    │   │   ├── Dockerfile
+    │   │   └── src/main/java/com/daangn/moderation/
+    │   │       ├── ModerationServiceApplication.java
+    │   │       ├── domain/
+    │   │       │   ├── model/
+    │   │       │   │   ├── ContentReview.java
+    │   │       │   │   ├── ModerationRule.java
+    │   │       │   │   ├── ViolationReport.java
+    │   │       │   │   ├── ReviewStatus.java
+    │   │       │   │   └── AutoModerationResult.java
+    │   │       │   ├── repository/
+    │   │       │   │   ├── ContentReviewRepository.java
+    │   │       │   │   └── ModerationRuleRepository.java
+    │   │       │   └── service/
+    │   │       │       ├── ModerationDomainService.java
+    │   │       │       └── AutoModerationService.java
+    │   │       ├── application/
+    │   │       ├── adapter/
+    │   │       └── config/
+    │   │
+    │   └── log-service/
+    │       ├── build.gradle
+    │       ├── Dockerfile
+    │       └── src/main/java/com/daangn/log/
+    │           ├── LogServiceApplication.java
+    │           ├── domain/
+    │           │   ├── model/
+    │           │   │   ├── AccessLog.java
+    │           │   │   ├── ErrorLog.java
+    │           │   │   ├── AuditLog.java
+    │           │   │   ├── BusinessLog.java
+    │           │   │   └── LogLevel.java
+    │           │   ├── repository/
+    │           │   │   └── LogRepository.java
+    │           │   └── service/
+    │           │       ├── LogDomainService.java
+    │           │       └── LogAnalyticsService.java
+    │           ├── application/
+    │           ├── adapter/
+    │           └── config/
+    │
+    ├── shared/
+    │   │
+    │   ├── common-dto/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/dto/
+    │   │       ├── ApiResponse.java
+    │   │       ├── PageRequest.java
+    │   │       ├── PageResponse.java
+    │   │       ├── ErrorResponse.java
+    │   │       ├── UserDto.java
+    │   │       ├── LocationDto.java
+    │   │       └── BaseDto.java
+    │   │
+    │   ├── common-domain/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/domain/
+    │   │       ├── BaseEntity.java
+    │   │       ├── BaseAggregateRoot.java
+    │   │       ├── DomainEvent.java
+    │   │       ├── ValueObject.java
+    │   │       ├── Entity.java
+    │   │       └── Repository.java
+    │   │
+    │   ├── common-util/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/util/
+    │   │       ├── DateUtil.java
+    │   │       ├── StringUtil.java
+    │   │       ├── ValidationUtil.java
+    │   │       ├── EncryptionUtil.java
+    │   │       ├── ImageUtil.java
+    │   │       └── JsonUtil.java
+    │   │
+    │   ├── common-exception/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/exception/
+    │   │       ├── DaangnException.java
+    │   │       ├── BusinessException.java
+    │   │       ├── ValidationException.java
+    │   │       ├── ResourceNotFoundException.java
+    │   │       ├── UnauthorizedException.java
+    │   │       ├── ForbiddenException.java
+    │   │       └── ExternalServiceException.java
+    │   │
+    │   ├── common-config/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/common/config/
+    │   │       ├── JpaConfig.java
+    │   │       ├── RedisConfig.java
+    │   │       ├── KafkaConfig.java
+    │   │       ├── SecurityConfig.java
+    │   │       ├── SwaggerConfig.java
+    │   │       ├── WebConfig.java
+    │   │       └── AsyncConfig.java
+    │   │
+    │   ├── event-driven/
+    │   │   ├── build.gradle
+    │   │   └── src/main/java/com/daangn/event/
+    │   │       ├── DomainEventPublisher.java
+    │   │       ├── DomainEventHandler.java
+    │   │       ├── EventStore.java
+    │   │       ├── events/
+    │   │       │   ├── TradeCreatedEvent.java
+    │   │       │   ├── PaymentCompletedEvent.java
+    │   │       │   ├── UserRegisteredEvent.java
+    │   │       │   ├── ChatMessageSentEvent.java
+    │   │       │   ├── MeetingCreatedEvent.java
+    │   │       │   └── BusinessRegisteredEvent.java
+    │   │       └── handlers/
+    │   │           ├── TradeEventHandler.java
+    │   │           ├── PaymentEventHandler.java
+    │   │           ├── UserEventHandler.java
+    │   │           └── NotificationEventHandler.java
+    │   │
+    │   └── security/
+    │       ├── build.gradle
+    │       └── src/main/java/com/daangn/security/
+    │           ├── JwtTokenProvider.java
+    │           ├── JwtAuthenticationFilter.java
+    │           ├── CustomUserDetailsService.java
+    │           ├── SecurityUtil.java
+    │           ├── OAuth2SuccessHandler.java
+    │           ├── OAuth2FailureHandler.java
+    │           └── config/
+    │               ├── JwtConfig.java
+    │               └── OAuth2Config.java
+    │
+    └── scripts/
+        ├── build/
+        │   ├── build-all.sh
+        │   ├── build-service.sh
+        │   └── docker-build.sh
+        ├── deploy/
+        │   ├── deploy-dev.sh
+        │   ├── deploy-staging.sh
+        │   ├── deploy-prod.sh
+        │   └── rollback.sh
+        ├── database/
+        │   ├── init-databases.sql
+        │   ├── migration/
+        │   │   ├── V1__create_user_tables.sql
+        │   │   ├── V2__create_trade_tables.sql
+        │   │   ├── V3__create_payment_tables.sql
+        │   │   ├── V4__create_community_tables.sql
+        │   │   ├── V5__create_job_tables.sql
+        │   │   ├── V6__create_realestate_tables.sql
+        │   │   ├── V7__create_car_tables.sql
+        │   │   ├── V8__create_business_tables.sql
+        │   │   ├── V9__create_meeting_tables.sql
+        │   │   └── V10__create_location_tables.sql
+        │   └── seed/
+        │       ├── seed-categories.sql
+        │       ├── seed-locations.sql
+        │       └── seed-test-data.sql
+        ├── monitoring/
+        │   ├── prometheus/
+        │   │   └── prometheus.yml
+        │   ├── grafana/
+        │   │   ├── dashboards/
+        │   │   └── datasources/
+        │   └── elasticsearch/
+        │       └── logstash.conf
+        └── infrastructure/
+            ├── terraform/
+            │   ├── main.tf
+            │   ├── variables.tf
+            │   ├── outputs.tf
+            │   ├── modules/
+            │   │   ├── vpc/
+            │   │   ├── eks/
+            │   │   ├── rds/
+            │   │   ├── elasticache/
+            │   │   └── s3/
+            │   └── environments/
+            │       ├── dev/
+            │       ├── staging/
+            │       └── prod/
+            └── helm/
+                ├── charts/
+                │   ├── daangn-microservices/
+                │   ├── infrastructure/
+                │   └── monitoring/
+                └── values/
+                    ├── dev-values.yaml
+                    ├── staging-values.yaml
+                    └── prod-values.yaml

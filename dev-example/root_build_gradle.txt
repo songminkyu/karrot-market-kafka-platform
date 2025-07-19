@@ -1,0 +1,439 @@
+// 루트 build.gradle
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.0' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+    id 'org.sonarqube' version '4.4.1.3373'
+    id 'jacoco'
+    id 'com.google.cloud.tools.jib' version '3.4.0' apply false
+}
+
+allprojects {
+    group = 'com.daangn'
+    version = '1.0.0'
+    
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        // Spring Boot Starters
+        implementation 'org.springframework.boot:spring-boot-starter'
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'org.springframework.boot:spring-boot-starter-aop'
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        
+        // Spring Cloud
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+        implementation 'org.springframework.cloud:spring-cloud-starter-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+        implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        
+        // Database
+        implementation 'mysql:mysql-connector-java:8.0.33'
+        implementation 'org.postgresql:postgresql:42.6.0'
+        implementation 'org.flywaydb:flyway-core'
+        implementation 'org.flywaydb:flyway-mysql'
+        
+        // Redis
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        implementation 'it.ozimov:embedded-redis:0.7.3'
+        
+        // MongoDB (for chat, log services)
+        implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+        
+        // Elasticsearch (for search service)
+        implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+        
+        // Kafka
+        implementation 'org.springframework.kafka:spring-kafka'
+        implementation 'org.apache.kafka:kafka-streams'
+        
+        // JWT & Security
+        implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+        implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+        implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+        
+        // WebSocket (for chat service)
+        implementation 'org.springframework.boot:spring-boot-starter-websocket'
+        
+        // Utils
+        implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+        implementation 'org.apache.commons:commons-lang3:3.13.0'
+        implementation 'com.fasterxml.jackson.core:jackson-databind'
+        implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+        
+        // AWS SDK
+        implementation 'software.amazon.awssdk:s3:2.21.29'
+        implementation 'software.amazon.awssdk:ses:2.21.29'
+        implementation 'software.amazon.awssdk:sns:2.21.29'
+        
+        // Monitoring & Observability
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+        implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+        implementation 'io.opentelemetry:opentelemetry-exporter-zipkin'
+        
+        // Documentation
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+        
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+        
+        // Test
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testImplementation 'org.springframework.security:spring-security-test'
+        testImplementation 'org.springframework.kafka:spring-kafka-test'
+        testImplementation 'org.testcontainers:junit-jupiter'
+        testImplementation 'org.testcontainers:mysql'
+        testImplementation 'org.testcontainers:postgresql'
+        testImplementation 'org.testcontainers:mongodb'
+        testImplementation 'org.testcontainers:elasticsearch'
+        testImplementation 'org.testcontainers:kafka'
+        testImplementation 'com.h2database:h2'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2023.0.0'
+            mavenBom 'org.testcontainers:testcontainers-bom:1.19.1'
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    jib {
+        from {
+            image = 'openjdk:21-jdk-slim'
+        }
+        to {
+            image = "daangn/${project.name}"
+            tags = [version, 'latest']
+        }
+        container {
+            jvmFlags = ['-XX:+UseContainerSupport', '-XX:MaxRAMPercentage=70.0']
+            ports = ['8080']
+            environment = [
+                'SPRING_PROFILES_ACTIVE': 'docker'
+            ]
+        }
+    }
+}
+
+// settings.gradle
+rootProject.name = 'daangn-microservices'
+
+include ':microservices:infrastructure:api-gateway'
+include ':microservices:infrastructure:service-discovery'
+include ':microservices:infrastructure:config-server'
+
+include ':microservices:core-domain:trade-service'
+include ':microservices:core-domain:chat-service'
+include ':microservices:core-domain:payment-service'
+include ':microservices:core-domain:review-service'
+
+include ':microservices:domain-services:user-service'
+include ':microservices:domain-services:location-service'
+include ':microservices:domain-services:community-service'
+include ':microservices:domain-services:job-service'
+include ':microservices:domain-services:real-estate-service'
+include ':microservices:domain-services:car-service'
+include ':microservices:domain-services:business-service'
+include ':microservices:domain-services:meeting-service'
+include ':microservices:domain-services:auth-service'
+
+include ':microservices:support-services:notification-service'
+include ':microservices:support-services:search-service'
+include ':microservices:support-services:moderation-service'
+include ':microservices:support-services:log-service'
+
+include ':shared:common-dto'
+include ':shared:common-domain'
+include ':shared:common-util'
+include ':shared:common-exception'
+include ':shared:common-config'
+include ':shared:event-driven'
+include ':shared:security'
+
+// docker-compose.yml
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: daangn
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/database/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: daangn_chat
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+
+  # Service Discovery
+  eureka-server:
+    build: ./microservices/infrastructure/service-discovery
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  # Config Server
+  config-server:
+    build: ./microservices/infrastructure/config-server
+    container_name: config-server
+    depends_on:
+      - eureka-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  # API Gateway
+  api-gateway:
+    build: ./microservices/infrastructure/api-gateway
+    container_name: api-gateway
+    depends_on:
+      - eureka-server
+      - config-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+
+  # Core Services
+  trade-service:
+    build: ./microservices/core-domain/trade-service
+    container_name: trade-service
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/daangn_trade
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  chat-service:
+    build: ./microservices/core-domain/chat-service
+    container_name: chat-service
+    depends_on:
+      - mongodb
+      - redis
+      - kafka
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATA_MONGODB_URI=mongodb://root:root@mongodb:27017/daangn_chat?authSource=admin
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  payment-service:
+    build: ./microservices/core-domain/payment-service
+    container_name: payment-service
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/daangn_payment
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  user-service:
+    build: ./microservices/domain-services/user-service
+    container_name: user-service
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/daangn_user
+      - SPRING_REDIS_HOST=redis
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  search-service:
+    build: ./microservices/support-services/search-service
+    container_name: search-service
+    depends_on:
+      - elasticsearch
+      - kafka
+      - eureka-server
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./scripts/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./scripts/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+
+volumes:
+  mysql_data:
+  redis_data:
+  mongodb_data:
+  elasticsearch_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: daangn-network
